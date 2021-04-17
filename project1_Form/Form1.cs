@@ -764,49 +764,50 @@ namespace project1_mod1_outwindow
 
 
 
-        List<double> altitude_stall = new List<double>();
-        List<double> vStall = new List<double>();
-        List<double> altitude_v_min_t = new List<double>();
-        List<double> v_min_t = new List<double>();
-        List<double> altitude_v_min = new List<double>();
-        List<double> v_buffet = new List<double>();
 
-        List<double> altitude = new List<double>();
-        List<double> v_max_t = new List<double>();
+            List<double> altitude_stall = new List<double>();
+            List<double> vStall = new List<double>();
+            List<double> altitude_v_min_t = new List<double>();
+            List<double> v_min_t = new List<double>();
+            List<double> altitude_v_min = new List<double>();
+            List<double> v_buffet = new List<double>();
+
+            List<double> altitude = new List<double>();
+            List<double> v_max_t = new List<double>();
 
 
-        double initialh = 0;
+            double initialh = 0;
             for (double h = 15000; ; h++)
             {
                 double v_stall = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
-        double t = A306.Get_T(h, Units.kt2mps(v_stall), Aircraft.FlightPhase.Cruise);
-        double t_max = A306.Get_T_max_cruise(h, Units.kt2mps(v_stall));
-                if (t_max<t)
+                double t = A306.Get_T(h, Units.kt2mps(v_stall), Aircraft.FlightPhase.Cruise);
+                double t_max = A306.Get_T_max_cruise(h, Units.kt2mps(v_stall));
+                if (t_max < t)
                 {
                     initialh = h;
                     break;
                 }
-}
+            }
 
 
 
-double h_ceiling = 0;
-double v_ceiling_CAS = 0;
+            double h_ceiling = 0;
+            double v_ceiling_CAS = 0;
 
-List<double> thrust = new List<double>();
-List<double> v_CAS = new List<double>();
+            List<double> thrust = new List<double>();
+            List<double> v_CAS = new List<double>();
 
             for (double h = 32000; ; h++)
             {
                 double v_stall = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
-double tmax = A306.Get_T_max_cruise(h, Units.kt2mps(v_stall));
+                double tmax = A306.Get_T_max_cruise(h, Units.kt2mps(v_stall));
 
                 for (double CAS = v_stall; ; CAS++)
                 {
                     v_CAS.Add(CAS);
 
                     double t = A306.Get_T(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Cruise);
-thrust.Add(t);
+                    thrust.Add(t);
 
                     if (thrust.Count > 0 && t > thrust.Min())
                         break;
@@ -823,7 +824,7 @@ thrust.Add(t);
             double h_ceiling_boundary = ((int)h_ceiling / 1000) * 1000;
 
 
-            for (double h = 15000; h<initialh; h += 1000)
+            for (double h = 15000; h < initialh; h += 1000)
             {
                 altitude_stall.Add(h);
                 vStall.Add(AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise))));
@@ -842,14 +843,14 @@ thrust.Add(t);
                     altitude_v_min_t.Add(h);
 
                 double lowerBoundary = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
-double upperBoundary = 600;
-double step = 1;
-const double EPS = 1;
+                double upperBoundary = 600;
+                double step = 1;
+                const double EPS = 1;
 
                 if (GetRedundantT(fileName, h, lowerBoundary) > 0 && GetRedundantT(fileName, h, upperBoundary) < 0)
                 {
                     double range = upperBoundary - lowerBoundary;
-range /= 2.0;
+                    range /= 2.0;
                     double vMiddle = upperBoundary - range;
                     while (GetRedundantT(fileName, h, vMiddle) < 0)
                     {
@@ -864,7 +865,7 @@ range /= 2.0;
                 {
                     v_min_t.Add(AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(lowerBoundary)));
                     double range = upperBoundary - lowerBoundary;
-range /= 2.0;
+                    range /= 2.0;
                     double vMiddle = upperBoundary - range;
                     while (GetRedundantT(fileName, h, vMiddle) < 0)
                     {
@@ -901,7 +902,7 @@ range /= 2.0;
 
 
             double h_ceiling_middle = h_ceiling_boundary / 2 + h_ceiling / 2;
-List<double> h_ceiling_middleVRoots = BisectionRootsCalculation(A306.Get_v_stall(h_ceiling_middle, Aircraft.FlightPhase.Cruise), 600, 1, 1, GetRedundantT, fileName, h_ceiling_middle, 2);
+            List<double> h_ceiling_middleVRoots = BisectionRootsCalculation(A306.Get_v_stall(h_ceiling_middle, Aircraft.FlightPhase.Cruise), 600, 1, 1, GetRedundantT, fileName, h_ceiling_middle, 2);
             if (h_ceiling_middleVRoots.Count >= 2)
             {
                 altitude.Add(h_ceiling_middle);
@@ -918,12 +919,12 @@ List<double> h_ceiling_middleVRoots = BisectionRootsCalculation(A306.Get_v_stall
 
 
             List<double> altitude_v_MO = new List<double>();
-List<double> v_v_MO = new List<double>();
-List<double> altitude_M_MO = new List<double>();
-List<double> v_M_MO = new List<double>();
+            List<double> v_v_MO = new List<double>();
+            List<double> altitude_M_MO = new List<double>();
+            List<double> v_M_MO = new List<double>();
 
 
-double h_cross = AtmosphereEnviroment.Get_h_cross(Units.kt2mps(A306.v_MO), A306.M_MO);
+            double h_cross = AtmosphereEnviroment.Get_h_cross(Units.kt2mps(A306.v_MO), A306.M_MO);
 
             for (double h = 15000; h <= h_ceiling_boundary + 1000; h += 1000)
             {
@@ -932,10 +933,10 @@ double h_cross = AtmosphereEnviroment.Get_h_cross(Units.kt2mps(A306.v_MO), A306.
                     altitude_v_MO.Add(h_cross);
                     v_v_MO.Add(AtmosphereEnviroment.Get_TAS(h_cross, Units.kt2mps(A306.v_MO)));
                     altitude_M_MO.Add(h_cross);
-                    v_M_MO.Add(A306.M_MO* AtmosphereEnviroment.Get_a(h_cross));
+                    v_M_MO.Add(A306.M_MO * AtmosphereEnviroment.Get_a(h_cross));
                     h = h_cross;
                 }
-                else if (h<h_cross)
+                else if (h < h_cross)
                 {
                     altitude_v_MO.Add(h);
                     v_v_MO.Add(AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(A306.v_MO)));
@@ -943,7 +944,7 @@ double h_cross = AtmosphereEnviroment.Get_h_cross(Units.kt2mps(A306.v_MO), A306.
                 else
                 {
                     altitude_M_MO.Add(h);
-                    v_M_MO.Add(A306.M_MO* AtmosphereEnviroment.Get_a(h));
+                    v_M_MO.Add(A306.M_MO * AtmosphereEnviroment.Get_a(h));
                 }
             }
 
@@ -1063,49 +1064,49 @@ double h_cross = AtmosphereEnviroment.Get_h_cross(Units.kt2mps(A306.v_MO), A306.
 
 
 
-        List<double> altitude_stall = new List<double>();
-        List<double> vStall = new List<double>();
-        List<double> altitude_v_min_t = new List<double>();
-        List<double> v_min_t = new List<double>();
-        List<double> altitude_v_min = new List<double>();
-        List<double> v_buffet = new List<double>();
+            List<double> altitude_stall = new List<double>();
+            List<double> vStall = new List<double>();
+            List<double> altitude_v_min_t = new List<double>();
+            List<double> v_min_t = new List<double>();
+            List<double> altitude_v_min = new List<double>();
+            List<double> v_buffet = new List<double>();
 
-        List<double> altitude = new List<double>();
-        List<double> v_max_t = new List<double>();
+            List<double> altitude = new List<double>();
+            List<double> v_max_t = new List<double>();
 
 
-        double initialh = 0;
+            double initialh = 0;
             for (double h = 15000; ; h++)
             {
                 double v_stall = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
-        double t = A306.Get_T(h, Units.kt2mps(v_stall), Aircraft.FlightPhase.Cruise);
-        double t_max = A306.Get_T_max_cruise(h, Units.kt2mps(v_stall));
-                if (t_max<t)
+                double t = A306.Get_T(h, Units.kt2mps(v_stall), Aircraft.FlightPhase.Cruise);
+                double t_max = A306.Get_T_max_cruise(h, Units.kt2mps(v_stall));
+                if (t_max < t)
                 {
                     initialh = h;
                     break;
                 }
-}
+            }
 
 
 
-double h_ceiling = 0;
-double v_ceiling_CAS = 0;
+            double h_ceiling = 0;
+            double v_ceiling_CAS = 0;
 
-List<double> thrust = new List<double>();
-List<double> v_CAS = new List<double>();
+            List<double> thrust = new List<double>();
+            List<double> v_CAS = new List<double>();
 
             for (double h = 32000; ; h++)
             {
                 double v_stall = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
-double tmax = A306.Get_T_max_cruise(h, Units.kt2mps(v_stall));
+                double tmax = A306.Get_T_max_cruise(h, Units.kt2mps(v_stall));
 
                 for (double CAS = v_stall; ; CAS++)
                 {
                     v_CAS.Add(CAS);
 
                     double t = A306.Get_T(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Cruise);
-thrust.Add(t);
+                    thrust.Add(t);
 
                     if (thrust.Count > 0 && t > thrust.Min())
                         break;
@@ -1123,7 +1124,7 @@ thrust.Add(t);
 
 
 
-            for (double h = 15000; h<initialh; h += 1000)
+            for (double h = 15000; h < initialh; h += 1000)
             {
                 altitude_stall.Add(h);
                 vStall.Add(AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise))));
@@ -1144,14 +1145,14 @@ thrust.Add(t);
                     altitude_v_min_t.Add(h);
 
                 double lowerBoundary = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
-double upperBoundary = 600;
-double step = 1;
-const double EPS = 1;
+                double upperBoundary = 600;
+                double step = 1;
+                const double EPS = 1;
 
                 if (GetRedundantT(fileName, h, lowerBoundary) > 0 && GetRedundantT(fileName, h, upperBoundary) < 0)
                 {
                     double range = upperBoundary - lowerBoundary;
-range /= 2.0;
+                    range /= 2.0;
                     double vMiddle = upperBoundary - range;
                     while (GetRedundantT(fileName, h, vMiddle) < 0)
                     {
@@ -1166,7 +1167,7 @@ range /= 2.0;
                 {
                     v_min_t.Add(AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(lowerBoundary)));
                     double range = upperBoundary - lowerBoundary;
-range /= 2.0;
+                    range /= 2.0;
                     double vMiddle = upperBoundary - range;
                     while (GetRedundantT(fileName, h, vMiddle) < 0)
                     {
@@ -1203,7 +1204,7 @@ range /= 2.0;
 
 
             double h_ceiling_middle = h_ceiling_boundary / 2 + h_ceiling / 2;
-List<double> h_ceiling_middleVRoots = BisectionRootsCalculation(A306.Get_v_stall(h_ceiling_middle, Aircraft.FlightPhase.Cruise), 600, 1, 1, GetRedundantT, fileName, h_ceiling_middle, 2);
+            List<double> h_ceiling_middleVRoots = BisectionRootsCalculation(A306.Get_v_stall(h_ceiling_middle, Aircraft.FlightPhase.Cruise), 600, 1, 1, GetRedundantT, fileName, h_ceiling_middle, 2);
             if (h_ceiling_middleVRoots.Count >= 2)
             {
                 altitude.Add(h_ceiling_middle);
@@ -1221,12 +1222,12 @@ List<double> h_ceiling_middleVRoots = BisectionRootsCalculation(A306.Get_v_stall
 
 
             List<double> altitude_v_MO = new List<double>();
-List<double> v_v_MO = new List<double>();
-List<double> altitude_M_MO = new List<double>();
-List<double> v_M_MO = new List<double>();
+            List<double> v_v_MO = new List<double>();
+            List<double> altitude_M_MO = new List<double>();
+            List<double> v_M_MO = new List<double>();
 
 
-double h_cross = AtmosphereEnviroment.Get_h_cross(Units.kt2mps(A306.v_MO), A306.M_MO);
+            double h_cross = AtmosphereEnviroment.Get_h_cross(Units.kt2mps(A306.v_MO), A306.M_MO);
 
             for (double h = 15000; h <= h_ceiling_boundary + 1000; h += 1000)
             {
@@ -1235,10 +1236,10 @@ double h_cross = AtmosphereEnviroment.Get_h_cross(Units.kt2mps(A306.v_MO), A306.
                     altitude_v_MO.Add(h_cross);
                     v_v_MO.Add(AtmosphereEnviroment.Get_TAS(h_cross, Units.kt2mps(A306.v_MO)));
                     altitude_M_MO.Add(h_cross);
-                    v_M_MO.Add(A306.M_MO* AtmosphereEnviroment.Get_a(h_cross));
+                    v_M_MO.Add(A306.M_MO * AtmosphereEnviroment.Get_a(h_cross));
                     h = h_cross;
                 }
-                else if (h<h_cross)
+                else if (h < h_cross)
                 {
                     altitude_v_MO.Add(h);
                     v_v_MO.Add(AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(A306.v_MO)));
@@ -1250,10 +1251,10 @@ double h_cross = AtmosphereEnviroment.Get_h_cross(Units.kt2mps(A306.v_MO), A306.
                     else if (h == ((int)initialh / 1000) * 1000 + 1000)
                     {
                         altitude_M_MO.Add(initialh);
-                        v_M_MO.Add(A306.M_MO* AtmosphereEnviroment.Get_a(initialh));
+                        v_M_MO.Add(A306.M_MO * AtmosphereEnviroment.Get_a(initialh));
                     }
                     altitude_M_MO.Add(h);
-                    v_M_MO.Add(A306.M_MO* AtmosphereEnviroment.Get_a(h));
+                    v_M_MO.Add(A306.M_MO * AtmosphereEnviroment.Get_a(h));
                 }
             }
 
@@ -1261,7 +1262,7 @@ double h_cross = AtmosphereEnviroment.Get_h_cross(Units.kt2mps(A306.v_MO), A306.
 
             bool vBuffetWrapVStallFlag = true;
             if (v_buffet.Count >= vStall.Count)
-                for (int i = 0; i<vStall.Count; i++)
+                for (int i = 0; i < vStall.Count; i++)
                     if (vStall[i] > v_buffet[i])
                     {
                         vBuffetWrapVStallFlag = false;
@@ -1270,9 +1271,9 @@ double h_cross = AtmosphereEnviroment.Get_h_cross(Units.kt2mps(A306.v_MO), A306.
 
 
             bool vBuffetCrossv_min_tFlag = false;
-int vBuffetInitialIndexOfv_min_t = altitude_v_min.IndexOf(altitude_v_min_t[1]);
-int vBuffetCrossv_min_tIndex = -1;
-            for (int i = vBuffetInitialIndexOfv_min_t; i<v_buffet.Count; i++)
+            int vBuffetInitialIndexOfv_min_t = altitude_v_min.IndexOf(altitude_v_min_t[1]);
+            int vBuffetCrossv_min_tIndex = -1;
+            for (int i = vBuffetInitialIndexOfv_min_t; i < v_buffet.Count; i++)
                 if (v_min_t[i - vBuffetInitialIndexOfv_min_t + 1] > v_buffet[i])
                 {
                     vBuffetCrossv_min_tFlag = true;
@@ -1282,7 +1283,7 @@ int vBuffetCrossv_min_tIndex = -1;
 
             if (vBuffetCrossv_min_tFlag)
             {
-                for (int i = vBuffetCrossv_min_tIndex + 1; i<v_buffet.Count; i++)
+                for (int i = vBuffetCrossv_min_tIndex + 1; i < v_buffet.Count; i++)
                 {
                     v_buffet.Remove(v_buffet[i]);
                     altitude_v_min.Remove(altitude_v_min[i]);
@@ -1321,7 +1322,7 @@ int vBuffetCrossv_min_tIndex = -1;
                 v_M_MO.Remove(v_M_MO[v_M_MO.Count - 1]);
             }
             altitude_M_MO.Add(h_ceiling_middle);
-            v_M_MO.Add(A306.M_MO* AtmosphereEnviroment.Get_a(h_ceiling_middle));
+            v_M_MO.Add(A306.M_MO * AtmosphereEnviroment.Get_a(h_ceiling_middle));
             while (altitude_M_MO.Contains(altitude[0]) && v_max_t[0] >= v_M_MO[altitude_M_MO.IndexOf(altitude[0])])
             {
                 altitude.Remove(altitude[0]);
@@ -1332,7 +1333,7 @@ int vBuffetCrossv_min_tIndex = -1;
 
 
             List<double> v_XAxis_max = new List<double>();
-v_XAxis_max.Add(v_max_t.Max());
+            v_XAxis_max.Add(v_max_t.Max());
             v_XAxis_max.Add(v_v_MO.Max());
             v_XAxis_max.Add(v_M_MO.Max());
 
@@ -1734,13 +1735,109 @@ v_XAxis_max.Add(v_max_t.Max());
 
 
         /*22-----------------------print balanced field length fig and mark BFL and BFL_v1
+        public delegate double Handler(string fileName, double numberOfEngines, double CAS);
+
+        public List<double> BisectionRootsCalculation(double lowerBoundary,
+            double upperBoundary, double step, double EPS, Handler handler, string fileName,
+            double functionParameter, int maxNumberOfRoots = 99)
+        {
+            List<double> roots = new List<double>();
+            double xToCalculate = lowerBoundary;
+            double functionValue = handler(fileName, functionParameter, xToCalculate);
+
+            while (xToCalculate <= upperBoundary + step / 2)
+            {
+                if (Math.Abs(functionValue) < EPS)
+                {
+                    roots.Add(xToCalculate);
+                    xToCalculate = xToCalculate + step / 2;
+                    functionValue = handler(fileName, functionParameter, xToCalculate);
+                }
+                else
+                {
+                    double nextxToCalculate = xToCalculate + step;
+                    double nextfunctionValue = handler(fileName, functionParameter,
+                        nextxToCalculate);
+                    if (Math.Abs(nextfunctionValue) < EPS)
+                    {
+                        roots.Add(nextxToCalculate);
+                        xToCalculate = nextxToCalculate + step / 2;
+                        functionValue = handler(fileName, functionParameter, xToCalculate);
+                    }
+                    else if (functionValue * nextfunctionValue > 0)
+                    {
+                        xToCalculate = nextxToCalculate;
+                        functionValue = nextfunctionValue;
+                    }
+                    else
+                    {
+                        bool find = false;
+                        while (!find)
+                            if (Math.Abs(nextxToCalculate - xToCalculate) < EPS)
+                            {
+                                roots.Add((xToCalculate + nextxToCalculate) / 2);
+                                xToCalculate = nextxToCalculate + step / 2;
+                                functionValue = handler(fileName, functionParameter,
+                                    xToCalculate);
+                                find = true;
+                            }
+                            else
+                            {
+                                double xMiddle = (xToCalculate + nextxToCalculate) / 2;
+                                double functionValueMiddle = handler(fileName, functionParameter,
+                                    xMiddle);
+                                if (Math.Abs(functionValueMiddle) < EPS)
+                                {
+                                    roots.Add(xMiddle);
+                                    find = true;
+                                    xToCalculate = xMiddle + step / 2;
+                                    functionValue = handler(fileName, functionParameter,
+                                        xToCalculate);
+                                }
+                                else if (functionValue * functionValueMiddle < 0)
+                                {
+                                    nextxToCalculate = xMiddle;
+                                    nextfunctionValue = functionValueMiddle;
+                                }
+                                else
+                                {
+                                    xToCalculate = xMiddle;
+                                    functionValue = functionValueMiddle;
+                                }
+                            }
+                    }
+                }
+                if (roots.Count >= maxNumberOfRoots)
+                    break;
+            }
+            return roots;
+        }
+
+        public double GetBFLSpread(string fileName, double numberOfEngines, double CAS)
+        {
+            Aircraft A306 = new Aircraft(fileName);
+            return A306.Get_Balanced_Field_Length((int)numberOfEngines, CAS, 
+                Aircraft.Balanced_Field_LengthType.AccelerateGo) - 
+                A306.Get_Balanced_Field_Length((int)numberOfEngines, CAS, 
+                Aircraft.Balanced_Field_LengthType.AccelerateStop);
+        }
+        
+
+
+
+
+
+
+
+
+
             List<double> v1 = new List<double>();
             List<double> bflAccelerateGo = new List<double>();
             List<double> bflAccelerateStop = new List<double>();
 
 
             double V1_max = Units.kt2mps(A306.Get_V_1_Maximum());
-            for (double V1 = 0.9 * V1_max; V1 <= V1_max + 0.5; V1 += 0.1)
+            for (double V1 = 0.9 * V1_max; V1 <= V1_max; V1 += 0.1)
             {
                 v1.Add(V1);
                 bflAccelerateGo.Add(A306.Get_Balanced_Field_Length(2, V1, Aircraft.Balanced_Field_LengthType.AccelerateGo));
@@ -1748,81 +1845,26 @@ v_XAxis_max.Add(v_max_t.Max());
             }
 
 
-            double lowerBoundary = 0.9 * V1_max;
-            double upperBounday = V1_max + 0.5;
-            double step = 0.01;
-            const double EPS = 1;
-            double BFL = 0;
+            List<double> BFL_V1Roots = BisectionRootsCalculation(0.9 * V1_max, V1_max, 0.01, 5, GetBFLSpread, fileName, 2, 1);
             double BFL_V1 = 0;
-            double vToCalculate = lowerBoundary;
-            double bflSpread = A306.Get_Balanced_Field_Length(2, vToCalculate, Aircraft.Balanced_Field_LengthType.AccelerateGo) - A306.Get_Balanced_Field_Length(2, vToCalculate, Aircraft.Balanced_Field_LengthType.AccelerateStop);
-            while (vToCalculate <= upperBounday + step / 2)
-                if (Math.Abs(bflSpread) < EPS)
-                {
-                    BFL_V1 = vToCalculate;
-                    vToCalculate = vToCalculate + step / 2;
-                    bflSpread = A306.Get_Balanced_Field_Length(2, vToCalculate, Aircraft.Balanced_Field_LengthType.AccelerateGo) - A306.Get_Balanced_Field_Length(2, vToCalculate, Aircraft.Balanced_Field_LengthType.AccelerateStop);
-                }
-                else
-                {
-                    double nextvToCalculate = vToCalculate + step;
-                    double nextBflSpread = A306.Get_Balanced_Field_Length(2, nextvToCalculate, Aircraft.Balanced_Field_LengthType.AccelerateGo) - A306.Get_Balanced_Field_Length(2, nextvToCalculate, Aircraft.Balanced_Field_LengthType.AccelerateStop);
-                    if (Math.Abs(nextBflSpread) < EPS)
-                    {
-                        BFL_V1 = nextvToCalculate;
-                        break;
-                    }
-                    else if (bflSpread * nextBflSpread > 0)
-                    {
-                        vToCalculate = nextvToCalculate;
-                        bflSpread = nextBflSpread;
-                    }
-                    else
-                    {
-                        bool find = false;
-                        while (!find)
-                            if (Math.Abs(nextvToCalculate - vToCalculate) < EPS)
-                            {
-                                BFL_V1 = (vToCalculate + nextvToCalculate) / 2;
-                                find = true;
-                            }
-                            else
-                            {
-                                double vMiddle = (vToCalculate + nextvToCalculate) / 2;
-                                double bflSpreadMiddle = A306.Get_Balanced_Field_Length(2, vMiddle, Aircraft.Balanced_Field_LengthType.AccelerateGo) - A306.Get_Balanced_Field_Length(2, vMiddle, Aircraft.Balanced_Field_LengthType.AccelerateStop);
-                                if (Math.Abs(bflSpreadMiddle) < EPS)
-                                {
-                                    BFL_V1 = vMiddle;
-                                    find = true;
-                                }
-                                else if (bflSpread * bflSpreadMiddle < 0)
-                                {
-                                    nextvToCalculate = vMiddle;
-                                    nextBflSpread = bflSpreadMiddle;
-                                }
-                                else
-                                {
-                                    vToCalculate = vMiddle;
-                                    bflSpread = bflSpreadMiddle;
-                                }
-                            }
-                    }
-                }
-            BFL = A306.Get_Balanced_Field_Length(2, BFL_V1, Aircraft.Balanced_Field_LengthType.AccelerateGo);
+            if (BFL_V1Roots.Count >= 1)
+                BFL_V1 = BFL_V1Roots[0];
+            double BFL = A306.Get_Balanced_Field_Length(2, BFL_V1, Aircraft.Balanced_Field_LengthType.AccelerateGo);
             
+
             int v1InsertIndex = 0, bflAccelerateGoInsertIndex = 0, bflAccelerateStopInsertIndex = 0;
             for (int i = 0; i < v1.Count; i++)
             {
                 if (BFL_V1 < v1[i])
                     v1InsertIndex = i;
-                if(BFL > bflAccelerateGo[i])
+                if (BFL > bflAccelerateGo[i])
                     bflAccelerateGoInsertIndex = i;
-                if(BFL < bflAccelerateStop[i])
+                if (BFL < bflAccelerateStop[i])
                     bflAccelerateStopInsertIndex = i;
                 if (v1InsertIndex != 0 && bflAccelerateGoInsertIndex != 0 && bflAccelerateStopInsertIndex != 0)
                     break;
             }
-            
+
 
             v1.Insert(v1InsertIndex, BFL_V1);
             bflAccelerateGo.Insert(bflAccelerateGoInsertIndex, BFL);
@@ -1838,13 +1880,20 @@ v_XAxis_max.Add(v_max_t.Max());
             chart1.ChartAreas[0].AxisX.Minimum = (int)(v1[0] - v1[0] * 0.01);
             chart1.ChartAreas[0].AxisX.Maximum = (int)(v1[v1.Count - 1] + v1[v1.Count - 1] * 0.05);
             chart1.ChartAreas[0].AxisX.LabelStyle.Interval = 2;
-            chart1.ChartAreas[0].AxisY.Minimum = ((int)(bflAccelerateGo[bflAccelerateGo.Count - 1] - bflAccelerateGo[bflAccelerateGo.Count - 1] * 0.05) / 100) * 100;
+            double axisYMin = Math.Min(bflAccelerateGo[bflAccelerateGo.Count - 1], bflAccelerateStop[0]);
+            chart1.ChartAreas[0].AxisY.Minimum = ((int)(axisYMin - axisYMin * 0.01) / 100) * 100;
+            double axisYMax = Math.Max(bflAccelerateGo[0], bflAccelerateStop[bflAccelerateStop.Count - 1]);
+            chart1.ChartAreas[0].AxisY.Maximum = ((int)(axisYMax + axisYMax * 0.01) / 100) * 100;
             chart1.ChartAreas[0].AxisY.LabelStyle.Interval = 200;
             chart1.Series[0].Points.DataBindXY(v1, bflAccelerateGo);
             chart1.Series[1].Points.DataBindXY(v1, bflAccelerateStop);
             chart1.Series[4].Points.DataBindXY(bflHorizontalLine_v1, bflHorizontalLine_length);
             chart1.Series[5].Points.DataBindXY(bflVerticalLine_v1, bflVerticalLine_length);
         */
+
+
+
+
 
 
 
@@ -1871,7 +1920,6 @@ v_XAxis_max.Add(v_max_t.Max());
 
 
 
-            
         }
     }
 }
