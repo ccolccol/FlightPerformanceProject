@@ -1816,9 +1816,9 @@ namespace project1_mod1_outwindow
         public double GetBFLSpread(string fileName, double numberOfEngines, double CAS)
         {
             Aircraft A306 = new Aircraft(fileName);
-            return A306.Get_Balanced_Field_Length((int)numberOfEngines, CAS, 
-                Aircraft.Balanced_Field_LengthType.AccelerateGo) - 
-                A306.Get_Balanced_Field_Length((int)numberOfEngines, CAS, 
+            return A306.Get_Balanced_Field_Length((int)numberOfEngines, CAS,
+                Aircraft.Balanced_Field_LengthType.AccelerateGo) -
+                A306.Get_Balanced_Field_Length((int)numberOfEngines, CAS,
                 Aircraft.Balanced_Field_LengthType.AccelerateStop);
         }
         
@@ -1845,12 +1845,12 @@ namespace project1_mod1_outwindow
             }
 
 
-            List<double> BFL_V1Roots = BisectionRootsCalculation(0.9 * V1_max, V1_max, 0.01, 5, GetBFLSpread, fileName, 2, 1);
+            List<double> BFL_V1Roots = BisectionRootsCalculation(0.9 * V1_max, V1_max, 0.01, 1, GetBFLSpread, fileName, 2, 1);
             double BFL_V1 = 0;
             if (BFL_V1Roots.Count >= 1)
                 BFL_V1 = BFL_V1Roots[0];
             double BFL = A306.Get_Balanced_Field_Length(2, BFL_V1, Aircraft.Balanced_Field_LengthType.AccelerateGo);
-            
+
 
             int v1InsertIndex = 0, bflAccelerateGoInsertIndex = 0, bflAccelerateStopInsertIndex = 0;
             for (int i = 0; i < v1.Count; i++)
@@ -1884,14 +1884,12 @@ namespace project1_mod1_outwindow
             chart1.ChartAreas[0].AxisY.Minimum = ((int)(axisYMin - axisYMin * 0.01) / 100) * 100;
             double axisYMax = Math.Max(bflAccelerateGo[0], bflAccelerateStop[bflAccelerateStop.Count - 1]);
             chart1.ChartAreas[0].AxisY.Maximum = ((int)(axisYMax + axisYMax * 0.01) / 100) * 100;
-            chart1.ChartAreas[0].AxisY.LabelStyle.Interval = 200;
+            chart1.ChartAreas[0].AxisY.LabelStyle.Interval = 100;
             chart1.Series[0].Points.DataBindXY(v1, bflAccelerateGo);
             chart1.Series[1].Points.DataBindXY(v1, bflAccelerateStop);
             chart1.Series[4].Points.DataBindXY(bflHorizontalLine_v1, bflHorizontalLine_length);
             chart1.Series[5].Points.DataBindXY(bflVerticalLine_v1, bflVerticalLine_length);
         */
-
-
 
 
 
@@ -1908,6 +1906,13 @@ namespace project1_mod1_outwindow
             string fileName = $@"{path}\A306.txt";
             Aircraft A306 = new Aircraft(fileName);
             // ************************************************************//
+
+
+
+
+
+
+
 
 
 
