@@ -1347,7 +1347,7 @@ namespace AircraftModel
         /// </summary>
         public double Get_Balanced_Field_Length(int numberOfEngines, double v_1, 
             Balanced_Field_LengthType balancedFieldLengthType, double h = 0, 
-            double TOGA_ClimbEngineRatio = 1, double transitionEngineLapseRate = 1, 
+            double TOGA_ClimbEngineRatio = 1.03, double transitionEngineLapseRate = 1, 
             double climbEngineLapseRate = 1, 
             TakeoffRunwayCondition takeoffRunwayCondition = TakeoffRunwayCondition.Paved, 
             double n = 1.2, double screenHeight = 35, double DeltaISA = 0)
