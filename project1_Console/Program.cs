@@ -157,6 +157,7 @@ namespace project1
 
 
 
+
         static void Main()
         {
             string path = System.Environment.CurrentDirectory;
@@ -187,10 +188,6 @@ namespace project1
 
 
             
-
-
-
-
             return;
         }
     }
