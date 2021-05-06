@@ -34,3 +34,9 @@ G:\project\gitProject\project1_Console\obj\Debug\project1.pdb
 G:\project\gitProject\project1_Console\bin\Debug\project1.exe
 G:\project\gitProject\project1_Console\bin\Debug\project1.pdb
 G:\project\gitProject\project1_Console\obj\Debug\project1.csprojResolveAssemblyReference.cache
+E:\project\gitProject\project1_Console\bin\Debug\project1.exe.config
+E:\project\gitProject\project1_Console\obj\Debug\project1.exe
+E:\project\gitProject\project1_Console\obj\Debug\project1.pdb
+E:\project\gitProject\project1_Console\bin\Debug\project1.exe
+E:\project\gitProject\project1_Console\bin\Debug\project1.pdb
+E:\project\gitProject\project1_Console\obj\Debug\project1.csprojResolveAssemblyReference.cache

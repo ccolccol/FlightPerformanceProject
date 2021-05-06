@@ -25,3 +25,12 @@ G:\project\gitProject\project1_Form\obj\Debug\project1-mod1-outwindow.csprojReso
 G:\project\gitProject\project1_Form\obj\Debug\project1_mod1_outwindow.Form1.resources
 G:\project\gitProject\project1_Form\obj\Debug\project1_mod1_outwindow.Properties.Resources.resources
 G:\project\gitProject\project1_Form\obj\Debug\project1-mod1-outwindow.csproj.GenerateResource.Cache
+E:\project\gitProject\project1_Form\bin\Debug\project1-mod1-outwindow.exe.config
+E:\project\gitProject\project1_Form\obj\Debug\project1-mod1-outwindow.exe
+E:\project\gitProject\project1_Form\obj\Debug\project1-mod1-outwindow.pdb
+E:\project\gitProject\project1_Form\bin\Debug\project1-mod1-outwindow.exe
+E:\project\gitProject\project1_Form\bin\Debug\project1-mod1-outwindow.pdb
+E:\project\gitProject\project1_Form\obj\Debug\project1-mod1-outwindow.csprojResolveAssemblyReference.cache
+E:\project\gitProject\project1_Form\obj\Debug\project1_mod1_outwindow.Form1.resources
+E:\project\gitProject\project1_Form\obj\Debug\project1_mod1_outwindow.Properties.Resources.resources
+E:\project\gitProject\project1_Form\obj\Debug\project1-mod1-outwindow.csproj.GenerateResource.Cache
