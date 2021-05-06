@@ -757,6 +757,42 @@ namespace project1_mod1_outwindow
                 Units.kt2mps(CAS), Aircraft.FlightPhase.Cruise);
         }
 
+        public double Get_High_Buffet_M(string fileName, List<double> UBO_Data_M,
+            List<double> UBO_Data_C_L_max, double h, double m)
+        {
+            Aircraft A306 = new Aircraft(fileName);
+            double EPS = 0.001;
+
+            double upperM = UBO_Data_M[UBO_Data_M.Count - 1], lowerM = upperM;
+            for (int i = UBO_Data_M.Count - 1; i >= 0; i--)
+            {
+                double TAS = UBO_Data_M[i] * AtmosphereEnviroment.Get_a(h);
+                double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
+                double C_L = A306.Get_C_L(h, CAS, m: m);
+                if (UBO_Data_C_L_max[i] >= C_L && i + 1 < UBO_Data_M.Count)
+                {
+                    lowerM = UBO_Data_M[i];
+                    upperM = UBO_Data_M[i + 1];
+                    break;
+                }
+            }
+            int lowerMIndex = UBO_Data_M.IndexOf(lowerM);
+            int upperMIndex = UBO_Data_M.IndexOf(upperM);
+            double UBO_M;
+            for (UBO_M = lowerM; UBO_M <= upperM; UBO_M += 0.0001)
+            {
+                double C_L_max = UBO_Data_C_L_max[lowerMIndex] + (UBO_Data_C_L_max[upperMIndex] -
+                    UBO_Data_C_L_max[lowerMIndex]) / (upperM - lowerM) * (UBO_M - lowerM);
+
+                double TAS = UBO_M * AtmosphereEnviroment.Get_a(h);
+                double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
+                double C_L = A306.Get_C_L(h, CAS, m: m);
+                if (Math.Abs(C_L_max - C_L) < EPS) break;
+            }
+            return UBO_M;
+        }
+
+
 
             
 
@@ -769,7 +805,7 @@ namespace project1_mod1_outwindow
             List<double> vStall = new List<double>();
             List<double> altitude_v_min_t = new List<double>();
             List<double> v_min_t = new List<double>();
-            List<double> altitude_v_min = new List<double>();
+            List<double> altitude_v_lbo = new List<double>();
             List<double> v_buffet = new List<double>();
 
             List<double> altitude = new List<double>();
@@ -890,13 +926,9 @@ namespace project1_mod1_outwindow
 
             for (double h = 15000; h <= h_ceiling_boundary; h += 1000)
             {
-                altitude_v_min.Add(h);
-
-
-                v_buffet.Add(AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(A306.Get_v_min(h, Aircraft.FlightPhase.Cruise))));
-
-                //double M = A306.SolveBuffetingM(h);
-                //v_buffet.Add(M * AtmosphereEnviroment.Get_a(h));
+                altitude_v_lbo.Add(h);
+                double M = A306.Get_Low_Buffet_M(h, factor: 0.98);
+                v_buffet.Add(M * AtmosphereEnviroment.Get_a(h));
             }
 
 
@@ -922,6 +954,8 @@ namespace project1_mod1_outwindow
             List<double> v_v_MO = new List<double>();
             List<double> altitude_M_MO = new List<double>();
             List<double> v_M_MO = new List<double>();
+            List<double> v_ubo = new List<double>();
+            List<double> altitude_v_ubo = new List<double>();
 
 
             double h_cross = AtmosphereEnviroment.Get_h_cross(Units.kt2mps(A306.v_MO), A306.M_MO);
@@ -948,18 +982,67 @@ namespace project1_mod1_outwindow
                 }
             }
 
+            List<double> UBO_Data_M = new List<double>() { 0.2, 0.28, 0.36, 0.42, 0.46, 0.5, 0.54,
+                0.58, 0.61, 0.63, 0.65, 0.67, 0.69, 0.71, 0.73, 0.75, 0.77, 0.79, 0.81, 0.82 };
+            List<double> UBO_Data_C_L_max = new List<double>() { 1.3540, 1.2769, 1.1999, 1.1416,
+                1.1031, 1.0646, 1.0261, 0.9876, 0.9606, 0.9450, 0.9325, 0.9221, 0.9127, 0.9013,
+                0.8877, 0.8669, 0.8367, 0.7899, 0.7233, 0.6796 };
+            while (UBO_Data_M[0] > 0.01)
+            {
+                double insertM = UBO_Data_M[0] - 0.01;
+                UBO_Data_M.Insert(0, insertM);
+                double C_L_max = UBO_Data_C_L_max[0] + 0.01 * (UBO_Data_C_L_max[0] -
+                    UBO_Data_C_L_max[1]) / (UBO_Data_M[1] - UBO_Data_M[0]);
+                UBO_Data_C_L_max.Insert(0, C_L_max);
+            }
+            while (UBO_Data_M[UBO_Data_M.Count - 1] < 1.3)
+            {
+                double insertM = UBO_Data_M[UBO_Data_M.Count - 1] + 0.01;
+                double C_L_max = UBO_Data_C_L_max[UBO_Data_C_L_max.Count - 1] + 0.01 *
+                    (UBO_Data_C_L_max[UBO_Data_C_L_max.Count - 1] -
+                    UBO_Data_C_L_max[UBO_Data_C_L_max.Count - 2]) / (UBO_Data_M[UBO_Data_M.Count -
+                    1] - UBO_Data_M[UBO_Data_M.Count - 2]);
+                if (C_L_max <= 0) break;
+                UBO_Data_M.Add(insertM);
+                UBO_Data_C_L_max.Add(C_L_max);
+            }
+
+            double factor = 0.98;
+
+            for (int i = 0; i < UBO_Data_C_L_max.Count; i++)
+                UBO_Data_C_L_max[i] *= factor;
+
+            for (double h = 15000; h <= h_ceiling_boundary + 1000; h += 1000)
+            {
+                altitude_v_ubo.Add(h);
+
+                double v_UBO = Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h, 
+                    A306.m_ref) * AtmosphereEnviroment.Get_a(h);
+                v_ubo.Add(v_UBO);
+            }
 
 
 
             chart1.ChartAreas[0].AxisX.Minimum = (int)(vStall[0] - vStall[0] * 0.05);
             chart1.ChartAreas[0].AxisY.Minimum = 15000;
+            double axisYMax = altitude_v_ubo[altitude_v_ubo.Count - 1] >
+                altitude_M_MO[altitude_M_MO.Count - 1] &&
+                altitude_v_ubo[altitude_v_ubo.Count - 1] >
+                altitude_v_lbo[altitude_v_lbo.Count - 1] ?
+                altitude_v_ubo[altitude_v_ubo.Count - 1] :
+                (altitude_M_MO[altitude_M_MO.Count - 1] >
+                altitude_v_lbo[altitude_v_lbo.Count - 1] ?
+                altitude_M_MO[altitude_M_MO.Count - 1] :
+                altitude_v_lbo[altitude_v_lbo.Count - 1]);
+            chart1.ChartAreas[0].AxisY.Maximum = (int)((axisYMax + axisYMax * 0.03) / 1000) * 1000; ;
             chart1.ChartAreas[0].AxisY.LabelStyle.Interval = 2000;
             chart1.Series[0].Points.DataBindXY(v_min_t, altitude_v_min_t);
             chart1.Series[1].Points.DataBindXY(vStall, altitude_stall);
-            chart1.Series[2].Points.DataBindXY(v_buffet, altitude_v_min);
+            chart1.Series[2].Points.DataBindXY(v_buffet, altitude_v_lbo);
             chart1.Series[3].Points.DataBindXY(v_max_t, altitude);
             chart1.Series[7].Points.DataBindXY(v_v_MO, altitude_v_MO);
             chart1.Series[8].Points.DataBindXY(v_M_MO, altitude_M_MO);
+            chart1.Series[9].Points.DataBindXY(v_ubo, altitude_v_ubo);
 
     */
 
@@ -1053,6 +1136,41 @@ namespace project1_mod1_outwindow
             Aircraft A306 = new Aircraft(fileName);
             return A306.Get_T_max_cruise(h, Units.kt2mps(CAS)) - A306.Get_T(h,
                 Units.kt2mps(CAS), Aircraft.FlightPhase.Cruise);
+        }
+
+        public double Get_High_Buffet_M(string fileName, List<double> UBO_Data_M,
+            List<double> UBO_Data_C_L_max, double h, double m)
+        {
+            Aircraft A306 = new Aircraft(fileName);
+            double EPS = 0.001;
+
+            double upperM = UBO_Data_M[UBO_Data_M.Count - 1], lowerM = upperM;
+            for (int i = UBO_Data_M.Count - 1; i >= 0; i--)
+            {
+                double TAS = UBO_Data_M[i] * AtmosphereEnviroment.Get_a(h);
+                double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
+                double C_L = A306.Get_C_L(h, CAS, m: m);
+                if (UBO_Data_C_L_max[i] >= C_L && i + 1 < UBO_Data_M.Count)
+                {
+                    lowerM = UBO_Data_M[i];
+                    upperM = UBO_Data_M[i + 1];
+                    break;
+                }
+            }
+            int lowerMIndex = UBO_Data_M.IndexOf(lowerM);
+            int upperMIndex = UBO_Data_M.IndexOf(upperM);
+            double UBO_M;
+            for (UBO_M = lowerM; UBO_M <= upperM; UBO_M += 0.0001)
+            {
+                double C_L_max = UBO_Data_C_L_max[lowerMIndex] + (UBO_Data_C_L_max[upperMIndex] -
+                    UBO_Data_C_L_max[lowerMIndex]) / (upperM - lowerM) * (UBO_M - lowerM);
+
+                double TAS = UBO_M * AtmosphereEnviroment.Get_a(h);
+                double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
+                double C_L = A306.Get_C_L(h, CAS, m: m);
+                if (Math.Abs(C_L_max - C_L) < EPS) break;
+            }
+            return UBO_M;
         }
         
 
@@ -1193,12 +1311,8 @@ namespace project1_mod1_outwindow
             for (double h = 15000; h <= h_ceiling_boundary; h += 1000)
             {
                 altitude_v_min.Add(h);
-
-
-                v_buffet.Add(AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(A306.Get_v_min(h, Aircraft.FlightPhase.Cruise))));
-
-                //double M = A306.SolveBuffetingM(h);
-                //v_buffet.Add(M * AtmosphereEnviroment.Get_a(h));
+                double M = A306.Get_Low_Buffet_M(h, factor: 0.98);
+                v_buffet.Add(M * AtmosphereEnviroment.Get_a(h));
             }
 
 
@@ -1225,7 +1339,8 @@ namespace project1_mod1_outwindow
             List<double> v_v_MO = new List<double>();
             List<double> altitude_M_MO = new List<double>();
             List<double> v_M_MO = new List<double>();
-
+            List<double> v_ubo = new List<double>();
+            List<double> altitude_v_ubo = new List<double>();
 
             double h_cross = AtmosphereEnviroment.Get_h_cross(Units.kt2mps(A306.v_MO), A306.M_MO);
 
@@ -1259,7 +1374,46 @@ namespace project1_mod1_outwindow
             }
 
 
+            List<double> UBO_Data_M = new List<double>() { 0.2, 0.28, 0.36, 0.42, 0.46, 0.5, 0.54,
+                0.58, 0.61, 0.63, 0.65, 0.67, 0.69, 0.71, 0.73, 0.75, 0.77, 0.79, 0.81, 0.82 };
+            List<double> UBO_Data_C_L_max = new List<double>() { 1.3540, 1.2769, 1.1999, 1.1416,
+                1.1031, 1.0646, 1.0261, 0.9876, 0.9606, 0.9450, 0.9325, 0.9221, 0.9127, 0.9013,
+                0.8877, 0.8669, 0.8367, 0.7899, 0.7233, 0.6796 };
+            while (UBO_Data_M[0] > 0.01)
+            {
+                double insertM = UBO_Data_M[0] - 0.01;
+                UBO_Data_M.Insert(0, insertM);
+                double C_L_max = UBO_Data_C_L_max[0] + 0.01 * (UBO_Data_C_L_max[0] -
+                    UBO_Data_C_L_max[1]) / (UBO_Data_M[1] - UBO_Data_M[0]);
+                UBO_Data_C_L_max.Insert(0, C_L_max);
+            }
+            while (UBO_Data_M[UBO_Data_M.Count - 1] < 1.3)
+            {
+                double insertM = UBO_Data_M[UBO_Data_M.Count - 1] + 0.01;
+                double C_L_max = UBO_Data_C_L_max[UBO_Data_C_L_max.Count - 1] + 0.01 *
+                    (UBO_Data_C_L_max[UBO_Data_C_L_max.Count - 1] -
+                    UBO_Data_C_L_max[UBO_Data_C_L_max.Count - 2]) / (UBO_Data_M[UBO_Data_M.Count -
+                    1] - UBO_Data_M[UBO_Data_M.Count - 2]);
+                if (C_L_max <= 0) break;
+                UBO_Data_M.Add(insertM);
+                UBO_Data_C_L_max.Add(C_L_max);
+            }
 
+            double factor = 0.98;
+
+            for (int i = 0; i < UBO_Data_C_L_max.Count; i++)
+                UBO_Data_C_L_max[i] *= factor;
+
+            for (double h = 15000; h <= h_ceiling_boundary + 1000; h += 1000)
+            {
+                altitude_v_ubo.Add(h);
+
+                double v_UBO = Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h, 
+                    A306.m_ref) * AtmosphereEnviroment.Get_a(h);
+                v_ubo.Add(v_UBO);
+            }
+
+            
             bool vBuffetWrapVStallFlag = true;
             if (v_buffet.Count >= vStall.Count)
                 for (int i = 0; i < vStall.Count; i++)
@@ -1299,6 +1453,20 @@ namespace project1_mod1_outwindow
                 v_min_t.Insert(0, v_buffet[v_buffet.Count - 1]);
             }
 
+
+
+            bool vMOWitninv_uboFlag = true;
+            for(int i = 0; i < v_ubo.Count; i++)
+            {
+                if (altitude_M_MO.Contains(altitude_v_ubo[i]))
+                    if (v_ubo[i] < v_M_MO[altitude_M_MO.IndexOf(altitude_v_ubo[i])])
+                        vMOWitninv_uboFlag = false;
+            }
+            if(vMOWitninv_uboFlag == true)
+            {
+                v_ubo.Clear();
+                altitude_v_ubo.Clear();
+            }
 
 
 
@@ -1352,6 +1520,7 @@ namespace project1_mod1_outwindow
             chart1.Series[3].Points.DataBindXY(v_max_t, altitude);
             chart1.Series[7].Points.DataBindXY(v_v_MO, altitude_v_MO);
             chart1.Series[8].Points.DataBindXY(v_M_MO, altitude_M_MO);
+            chart1.Series[9].Points.DataBindXY(v_ubo, altitude_v_ubo);
 
         */
 
@@ -1362,27 +1531,312 @@ namespace project1_mod1_outwindow
 
 
 
-        /*15-----------------------------------print C_L - v fig, but how to draw C_L_buffet - v?
-                    List<double> c_L = new List<double>();
-        List<double> tas = new List<double>();
+        /*15--------------------------------------------------------print C_L, C_L_buffet - M fig
+            List<double> m1 = new List<double>();
+            List<double> c_l1 = new List<double>();
+            List<double> m2 = new List<double>();
+            List<double> c_l2 = new List<double>();
+
+            List<double> UBO_Data_M = new List<double>() { 0.2, 0.28, 0.36, 0.42, 0.46, 0.5, 0.54, 0.58,
+                0.61, 0.63, 0.65, 0.67, 0.69, 0.71, 0.73, 0.75, 0.77, 0.79, 0.81, 0.82 };
+            List<double> UBO_Data_C_L_max = new List<double>() { 1.3540, 1.2769, 1.1999, 1.1416, 1.1031,
+                1.0646, 1.0261, 0.9876, 0.9606, 0.9450, 0.9325, 0.9221, 0.9127, 0.9013, 0.8877,
+                0.8669, 0.8367, 0.7899, 0.7233, 0.6796 };
+            while (UBO_Data_M[0] > 0.01)
+            {
+                double insertM = UBO_Data_M[0] - 0.01;
+                UBO_Data_M.Insert(0, insertM);
+                double C_L_max = UBO_Data_C_L_max[0] + 0.01 * (UBO_Data_C_L_max[0] - UBO_Data_C_L_max[1]) /
+                    (UBO_Data_M[1] - UBO_Data_M[0]);
+                UBO_Data_C_L_max.Insert(0, C_L_max);
+            }
+            while (UBO_Data_M[UBO_Data_M.Count - 1] < 1.3)
+            {
+                double insertM = UBO_Data_M[UBO_Data_M.Count - 1] + 0.01;
+                double C_L_max = UBO_Data_C_L_max[UBO_Data_C_L_max.Count - 1] + 0.01 *
+                    (UBO_Data_C_L_max[UBO_Data_C_L_max.Count - 1] - UBO_Data_C_L_max[UBO_Data_C_L_max.Count - 2]) /
+                    (UBO_Data_M[UBO_Data_M.Count - 1] - UBO_Data_M[UBO_Data_M.Count - 2]);
+                if (C_L_max <= 0) break;
+                UBO_Data_M.Add(insertM);
+                UBO_Data_C_L_max.Add(C_L_max);
+            }
+
+            double factor = 0.98;
+            for (int i = 0; i < UBO_Data_C_L_max.Count; i++)
+                UBO_Data_C_L_max[i] *= factor;
+
+            double h1 = 15000;
+            double h2 = 30000;
+
+            double CAS_min = A306.Get_v_stall(h1, Aircraft.FlightPhase.Climb);
+            double TAS_min = AtmosphereEnviroment.Get_TAS(h1, Units.kt2mps(CAS_min));
+            double initialM = TAS_min / AtmosphereEnviroment.Get_a(h1);
+            int C_L_InitialMIndex = 0;
+            foreach (double M in UBO_Data_M)
+                if (M > initialM)
+                {
+                    C_L_InitialMIndex = UBO_Data_M.IndexOf(M) - 1;
+                    break;
+                }
+            int removeCount = 0;
+            while(removeCount < C_L_InitialMIndex)
+            {
+                UBO_Data_M.Remove(UBO_Data_M[0]);
+                UBO_Data_C_L_max.Remove(UBO_Data_C_L_max[0]);
+                removeCount++;
+            }
+            
+            foreach(double M in UBO_Data_M)
+            {
+                m1.Add(M);
+
+                double TAS = M * AtmosphereEnviroment.Get_a(h1);
+                double CAS = AtmosphereEnviroment.Get_CAS(h1, TAS);
+                double C_L = A306.Get_C_L(h1, CAS);
+                c_l1.Add(C_L);
+
+                TAS = M * AtmosphereEnviroment.Get_a(h2);
+                CAS = AtmosphereEnviroment.Get_CAS(h2, TAS);
+                C_L = A306.Get_C_L(h2, CAS);
+                if(C_L <= c_l1.Max())
+                {
+                    m2.Add(M);
+                    c_l2.Add(C_L);
+                }
+            }
+
+            chart1.ChartAreas[0].AxisX.Minimum = (int)((UBO_Data_M[0] - UBO_Data_M[0] * 0.1) * 10) * 0.1;
+            chart1.ChartAreas[0].AxisX.Maximum = (int)((UBO_Data_M[UBO_Data_M.Count - 1] + UBO_Data_M[UBO_Data_M.Count - 1] * 0.1) * 10) * 0.1;
+            chart1.ChartAreas[0].AxisX.LabelStyle.Interval = 0.1;
+            double axisYMax = Math.Max(UBO_Data_C_L_max.Max(), c_l1.Max());
+            chart1.ChartAreas[0].AxisY.Maximum = (int)((axisYMax + axisYMax * 0.1) * 10 / 2) * 0.2;
+            chart1.ChartAreas[0].AxisY.LabelStyle.Interval = 0.2;
+            chart1.Series[0].Points.DataBindXY(UBO_Data_M, UBO_Data_C_L_max);
+            chart1.Series[1].Points.DataBindXY(m1, c_l1);
+            chart1.Series[2].Points.DataBindXY(m2, c_l2);
+        */
 
 
-        double h = 18000;
 
-        for(double CAS = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise); CAS <= 500; CAS += 10)
+
+
+
+
+
+
+        /*16----------------------------------------------print buffet envelope(M - h fig)
+        public double Get_High_Buffet_M(string fileName, List<double> UBO_Data_M, 
+            List<double> UBO_Data_C_L_max, double h, double m)
         {
-            double TAS = AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(CAS));
-            tas.Add(TAS);
+            Aircraft A306 = new Aircraft(fileName);
+            double EPS = 0.001;
 
-            double C_L = A306.Get_C_L(h, Units.kt2mps(CAS));
-            c_L.Add(C_L);
+            double upperM = UBO_Data_M[UBO_Data_M.Count - 1], lowerM = upperM;
+            for (int i = UBO_Data_M.Count - 1; i >= 0; i--)
+            {
+                double TAS = UBO_Data_M[i] * AtmosphereEnviroment.Get_a(h);
+                double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
+                double C_L = A306.Get_C_L(h, CAS, m: m);
+                if (UBO_Data_C_L_max[i] >= C_L && i + 1 < UBO_Data_M.Count)
+                {
+                    lowerM = UBO_Data_M[i];
+                    upperM = UBO_Data_M[i + 1];
+                    break;
+                }
+            }
+            int lowerMIndex = UBO_Data_M.IndexOf(lowerM);
+            int upperMIndex = UBO_Data_M.IndexOf(upperM);
+            double UBO_M;
+            for (UBO_M = lowerM; UBO_M <= upperM; UBO_M += 0.0001)
+            {
+                double C_L_max = UBO_Data_C_L_max[lowerMIndex] + (UBO_Data_C_L_max[upperMIndex] - 
+                    UBO_Data_C_L_max[lowerMIndex]) / (upperM - lowerM) * (UBO_M - lowerM);
+
+                double TAS = UBO_M * AtmosphereEnviroment.Get_a(h);
+                double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
+                double C_L = A306.Get_C_L(h, CAS, m: m);
+                if (Math.Abs(C_L_max - C_L) < EPS) break;
+            }
+            return UBO_M;
         }
 
 
 
-        chart1.ChartAreas[0].AxisX.Minimum = (int)(tas[0] - tas[0] * 0.05);
-        chart1.ChartAreas[0].AxisY.LabelStyle.Interval = 0.0000001;
-        chart1.Series[0].Points.DataBindXY(tas, c_L);
+
+
+
+
+
+
+
+                        List<double> alt1 = new List<double>();
+            List<double> lbo_m1 = new List<double>();
+            List<double> ubo_m1 = new List<double>();
+            List<double> alt2 = new List<double>();
+            List<double> lbo_m2 = new List<double>();
+            List<double> ubo_m2 = new List<double>();
+            List<double> alt3 = new List<double>();
+            List<double> lbo_m3 = new List<double>();
+            List<double> ubo_m3 = new List<double>();
+
+            double m_low = A306.m_ref - (A306.m_ref - A306.m_min) * 0.2;
+            double m_middle = A306.m_ref + (A306.m_max - A306.m_ref) * 0.1;
+            double m_high = A306.m_ref + (A306.m_max - A306.m_ref) * 0.5;
+
+
+            List<double> UBO_Data_M = new List<double>() { 0.2, 0.28, 0.36, 0.42, 0.46, 0.5, 0.54,
+                0.58, 0.61, 0.63, 0.65, 0.67, 0.69, 0.71, 0.73, 0.75, 0.77, 0.79, 0.81, 0.82 };
+            List<double> UBO_Data_C_L_max = new List<double>() { 1.3540, 1.2769, 1.1999, 1.1416,
+                1.1031, 1.0646, 1.0261, 0.9876, 0.9606, 0.9450, 0.9325, 0.9221, 0.9127, 0.9013,
+                0.8877, 0.8669, 0.8367, 0.7899, 0.7233, 0.6796 };
+            while (UBO_Data_M[0] > 0.01)
+            {
+                double insertM = UBO_Data_M[0] - 0.01;
+                UBO_Data_M.Insert(0, insertM);
+                double C_L_max = UBO_Data_C_L_max[0] + 0.01 * (UBO_Data_C_L_max[0] -
+                    UBO_Data_C_L_max[1]) / (UBO_Data_M[1] - UBO_Data_M[0]);
+                UBO_Data_C_L_max.Insert(0, C_L_max);
+            }
+            while (UBO_Data_M[UBO_Data_M.Count - 1] < 1.3)
+            {
+                double insertM = UBO_Data_M[UBO_Data_M.Count - 1] + 0.01;
+                double C_L_max = UBO_Data_C_L_max[UBO_Data_C_L_max.Count - 1] + 0.01 *
+                    (UBO_Data_C_L_max[UBO_Data_C_L_max.Count - 1] -
+                    UBO_Data_C_L_max[UBO_Data_C_L_max.Count - 2]) / (UBO_Data_M[UBO_Data_M.Count -
+                    1] - UBO_Data_M[UBO_Data_M.Count - 2]);
+                if (C_L_max <= 0) break;
+                UBO_Data_M.Add(insertM);
+                UBO_Data_C_L_max.Add(C_L_max);
+            }
+
+            double factor = 0.98;
+
+            for (int i = 0; i < UBO_Data_C_L_max.Count; i++)
+                UBO_Data_C_L_max[i] *= factor;
+
+            double h_ceiling = 0;
+            for (double h = 38000; ; h++)
+            {
+                int comparePosition;
+                for (comparePosition = 0; comparePosition < UBO_Data_M.Count; comparePosition++)
+                {
+                    double TAS = UBO_Data_M[comparePosition] * AtmosphereEnviroment.Get_a(h);
+                    double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
+                    double C_L = A306.Get_C_L(h, CAS, m: m_low);
+                    if (C_L < UBO_Data_C_L_max[comparePosition]) break;
+                }
+                if (comparePosition == UBO_Data_M.Count)
+                {
+                    h_ceiling = --h;
+                    break;
+                }
+            }
+            double h_ceiling_boundary = (int)(h_ceiling / 1000) * 1000;
+
+            for (double h = 15000; h <= h_ceiling_boundary; h += 1000)
+            {
+                alt1.Add(h);
+                lbo_m1.Add(A306.Get_Low_Buffet_M(h, m: m_low, factor: factor));
+                ubo_m1.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h, m_low));
+            }
+
+            double h_ceiling_middle = alt1[alt1.Count - 1] + (h_ceiling - alt1[alt1.Count - 1]) / 1.3;
+            alt1.Add(h_ceiling_middle);
+            lbo_m1.Add(A306.Get_Low_Buffet_M(h_ceiling_middle, m: m_low, factor: factor));
+            ubo_m1.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h_ceiling_middle, m_low));
+
+            alt1.Add(h_ceiling);
+            double buffetM_h_ceiling = A306.Get_Low_Buffet_M(h_ceiling, m: m_low, factor: factor);
+            lbo_m1.Add(buffetM_h_ceiling);
+            ubo_m1.Add(buffetM_h_ceiling);
+
+
+
+            for (double h = 38000; ; h++)
+            {
+                int comparePosition;
+                for (comparePosition = 0; comparePosition < UBO_Data_M.Count; comparePosition++)
+                {
+                    double TAS = UBO_Data_M[comparePosition] * AtmosphereEnviroment.Get_a(h);
+                    double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
+                    double C_L = A306.Get_C_L(h, CAS, m: m_middle);
+                    if (C_L < UBO_Data_C_L_max[comparePosition]) break;
+                }
+                if (comparePosition == UBO_Data_M.Count)
+                {
+                    h_ceiling = --h;
+                    break;
+                }
+            }
+            h_ceiling_boundary = (int)(h_ceiling / 1000) * 1000;
+
+            for (double h = 15000; h <= h_ceiling_boundary; h += 1000)
+            {
+                alt2.Add(h);
+                lbo_m2.Add(A306.Get_Low_Buffet_M(h, m: m_middle, factor: factor));
+                ubo_m2.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h, m_middle));
+            }
+
+            h_ceiling_middle = alt2[alt2.Count - 1] + (h_ceiling - alt2[alt2.Count - 1]) / 1.3;
+            alt2.Add(h_ceiling_middle);
+            lbo_m2.Add(A306.Get_Low_Buffet_M(h_ceiling_middle, m: m_middle, factor: factor));
+            ubo_m2.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h_ceiling_middle, m_middle));
+
+            alt2.Add(h_ceiling);
+            buffetM_h_ceiling = A306.Get_Low_Buffet_M(h_ceiling, m: m_middle, factor: factor);
+            lbo_m2.Add(buffetM_h_ceiling);
+            ubo_m2.Add(buffetM_h_ceiling);
+
+
+
+            for (double h = 38000; ; h++)
+            {
+                int comparePosition;
+                for (comparePosition = 0; comparePosition < UBO_Data_M.Count; comparePosition++)
+                {
+                    double TAS = UBO_Data_M[comparePosition] * AtmosphereEnviroment.Get_a(h);
+                    double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
+                    double C_L = A306.Get_C_L(h, CAS, m: m_high);
+                    if (C_L < UBO_Data_C_L_max[comparePosition]) break;
+                }
+                if (comparePosition == UBO_Data_M.Count)
+                {
+                    h_ceiling = --h;
+                    break;
+                }
+            }
+            h_ceiling_boundary = (int)(h_ceiling / 1000) * 1000;
+
+            for (double h = 15000; h <= h_ceiling_boundary; h += 1000)
+            {
+                alt3.Add(h);
+                lbo_m3.Add(A306.Get_Low_Buffet_M(h, m: m_high, factor: factor));
+                ubo_m3.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h, m_high));
+            }
+
+            h_ceiling_middle = alt3[alt3.Count - 1] + (h_ceiling - alt3[alt3.Count - 1]) / 1.3;
+            alt3.Add(h_ceiling_middle);
+            lbo_m3.Add(A306.Get_Low_Buffet_M(h_ceiling_middle, m: m_high, factor: factor));
+            ubo_m3.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h_ceiling_middle, m_high));
+
+            alt3.Add(h_ceiling);
+            buffetM_h_ceiling = A306.Get_Low_Buffet_M(h_ceiling, m: m_high, factor: factor);
+            lbo_m3.Add(buffetM_h_ceiling);
+            ubo_m3.Add(buffetM_h_ceiling);
+
+
+            chart1.ChartAreas[0].AxisX.Minimum = (int)((lbo_m1[0] - lbo_m1[0] * 0.05) * 20) * 0.05;
+            chart1.ChartAreas[0].AxisX.Maximum = (int)((ubo_m1[0] + ubo_m1[0] * 0.1) * 10) * 0.1;
+            chart1.ChartAreas[0].AxisX.LabelStyle.Interval = 0.05;
+            chart1.ChartAreas[0].AxisY.Minimum = alt1[0];
+            chart1.ChartAreas[0].AxisY.Maximum = (int)((alt1[alt1.Count - 1] + alt1[alt1.Count - 1] * 0.05) / 1000) * 1000;
+            chart1.ChartAreas[0].AxisY.LabelStyle.Interval = 2000;
+            chart1.Series[0].Points.DataBindXY(lbo_m1, alt1);
+            chart1.Series[1].Points.DataBindXY(ubo_m1, alt1);
+            chart1.Series[2].Points.DataBindXY(lbo_m2, alt2);
+            chart1.Series[3].Points.DataBindXY(ubo_m2, alt2);
+            chart1.Series[7].Points.DataBindXY(lbo_m3, alt3);
+            chart1.Series[8].Points.DataBindXY(ubo_m3, alt3);
         */
 
 
@@ -1391,7 +1845,532 @@ namespace project1_mod1_outwindow
 
 
 
-        /*16--------------------------------------------------------print CG - v fig
+        /*17--------------------------------------------print buffet onset without trim
+                public double Get_High_Buffet_M(string fileName, List<double> UBO_Data_M,
+            List<double> UBO_Data_C_L_max, double h, double m)
+        {
+            Aircraft A306 = new Aircraft(fileName);
+            double EPS = 0.001;
+
+            double upperM = UBO_Data_M[UBO_Data_M.Count - 1], lowerM = upperM;
+            for (int i = UBO_Data_M.Count - 1; i >= 0; i--)
+            {
+                double TAS = UBO_Data_M[i] * AtmosphereEnviroment.Get_a(h);
+                double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
+                double C_L = A306.Get_C_L(h, CAS, m: m);
+                if (UBO_Data_C_L_max[i] >= C_L && i + 1 < UBO_Data_M.Count)
+                {
+                    lowerM = UBO_Data_M[i];
+                    upperM = UBO_Data_M[i + 1];
+                    break;
+                }
+            }
+            int lowerMIndex = UBO_Data_M.IndexOf(lowerM);
+            int upperMIndex = UBO_Data_M.IndexOf(upperM);
+            double UBO_M;
+            for (UBO_M = lowerM; UBO_M <= upperM; UBO_M += 0.0001)
+            {
+                double C_L_max = UBO_Data_C_L_max[lowerMIndex] + (UBO_Data_C_L_max[upperMIndex] -
+                    UBO_Data_C_L_max[lowerMIndex]) / (upperM - lowerM) * (UBO_M - lowerM);
+
+                double TAS = UBO_M * AtmosphereEnviroment.Get_a(h);
+                double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
+                double C_L = A306.Get_C_L(h, CAS, m: m);
+                if (Math.Abs(C_L_max - C_L) < EPS) break;
+            }
+            return UBO_M;
+        }
+
+
+
+
+
+
+
+
+
+
+
+                        List<double> w1 = new List<double>();
+            List<double> lbo_m1 = new List<double>();
+            List<double> ubo_m1 = new List<double>();
+            List<double> w2 = new List<double>();
+            List<double> lbo_m2 = new List<double>();
+            List<double> ubo_m2 = new List<double>();
+            List<double> w3 = new List<double>();
+            List<double> lbo_m3 = new List<double>();
+            List<double> ubo_m3 = new List<double>();
+
+            double h_low = 33000;
+            double h_middle = 35000;
+            double h_high = 37000;
+
+
+            List<double> UBO_Data_M = new List<double>() { 0.2, 0.28, 0.36, 0.42, 0.46, 0.5, 0.54,
+                0.58, 0.61, 0.63, 0.65, 0.67, 0.69, 0.71, 0.73, 0.75, 0.77, 0.79, 0.81, 0.82 };
+            List<double> UBO_Data_C_L_max = new List<double>() { 1.3540, 1.2769, 1.1999, 1.1416,
+                1.1031, 1.0646, 1.0261, 0.9876, 0.9606, 0.9450, 0.9325, 0.9221, 0.9127, 0.9013,
+                0.8877, 0.8669, 0.8367, 0.7899, 0.7233, 0.6796 };
+            while (UBO_Data_M[0] > 0.01)
+            {
+                double insertM = UBO_Data_M[0] - 0.01;
+                UBO_Data_M.Insert(0, insertM);
+                double C_L_max = UBO_Data_C_L_max[0] + 0.01 * (UBO_Data_C_L_max[0] -
+                    UBO_Data_C_L_max[1]) / (UBO_Data_M[1] - UBO_Data_M[0]);
+                UBO_Data_C_L_max.Insert(0, C_L_max);
+            }
+            while (UBO_Data_M[UBO_Data_M.Count - 1] < 1.3)
+            {
+                double insertM = UBO_Data_M[UBO_Data_M.Count - 1] + 0.01;
+                double C_L_max = UBO_Data_C_L_max[UBO_Data_C_L_max.Count - 1] + 0.01 *
+                    (UBO_Data_C_L_max[UBO_Data_C_L_max.Count - 1] -
+                    UBO_Data_C_L_max[UBO_Data_C_L_max.Count - 2]) / (UBO_Data_M[UBO_Data_M.Count -
+                    1] - UBO_Data_M[UBO_Data_M.Count - 2]);
+                if (C_L_max <= 0) break;
+                UBO_Data_M.Add(insertM);
+                UBO_Data_C_L_max.Add(C_L_max);
+            }
+
+            double factor = 0.98;
+
+            for (int i = 0; i < UBO_Data_C_L_max.Count; i++)
+                UBO_Data_C_L_max[i] *= factor;
+
+            double W_ceiling = 0;
+            for (double W = A306.m_max; ; W += 1000)
+            {
+                int comparePosition;
+                for (comparePosition = 0; comparePosition < UBO_Data_M.Count; comparePosition++)
+                {
+                    double TAS = UBO_Data_M[comparePosition] * AtmosphereEnviroment.Get_a(h_low);
+                    double CAS = AtmosphereEnviroment.Get_CAS(h_low, TAS);
+                    double C_L = A306.Get_C_L(h_low, CAS, m: W);
+                    if (C_L < UBO_Data_C_L_max[comparePosition]) break;
+                }
+                if (comparePosition == UBO_Data_M.Count)
+                {
+                    W_ceiling = W - 200;
+                    break;
+                }
+            }
+            double W_ceiling_boundary = (int)(W_ceiling / 10000) * 10000;
+
+            for (double W = A306.m_min; W <= W_ceiling_boundary; W += 10000)
+            {
+                w1.Add(W);
+                lbo_m1.Add(A306.Get_Low_Buffet_M(h_low, m: W, factor: factor));
+                ubo_m1.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h_low, W));
+            }
+
+            double W_ceiling_middle = w1[w1.Count - 1] + (W_ceiling - w1[w1.Count - 1]) / 1.3;
+            w1.Add(W_ceiling_middle);
+            lbo_m1.Add(A306.Get_Low_Buffet_M(h_low, m: W_ceiling_middle, factor: factor));
+            ubo_m1.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h_low,
+                W_ceiling_middle));
+
+            w1.Add(W_ceiling);
+            double buffetM_W_ceiling = A306.Get_Low_Buffet_M(h_low, m: W_ceiling, factor: factor);
+            lbo_m1.Add(buffetM_W_ceiling);
+            ubo_m1.Add(buffetM_W_ceiling);
+
+
+
+            for (double W = A306.m_max; ; W += 1000)
+            {
+                int comparePosition;
+                for (comparePosition = 0; comparePosition < UBO_Data_M.Count; comparePosition++)
+                {
+                    double TAS = UBO_Data_M[comparePosition] * AtmosphereEnviroment.Get_a(h_middle);
+                    double CAS = AtmosphereEnviroment.Get_CAS(h_middle, TAS);
+                    double C_L = A306.Get_C_L(h_middle, CAS, m: W);
+                    if (C_L < UBO_Data_C_L_max[comparePosition]) break;
+                }
+                if (comparePosition == UBO_Data_M.Count)
+                {
+                    W_ceiling = W - 500;
+                    break;
+                }
+            }
+            W_ceiling_boundary = (int)(W_ceiling / 10000) * 10000;
+
+            for (double W = A306.m_min; W <= W_ceiling_boundary; W += 10000)
+            {
+                w2.Add(W);
+                lbo_m2.Add(A306.Get_Low_Buffet_M(h_middle, m: W, factor: factor));
+                ubo_m2.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h_middle, W));
+            }
+
+            W_ceiling_middle = w2[w2.Count - 1] + (W_ceiling - w2[w2.Count - 1]) / 1.3;
+            w2.Add(W_ceiling_middle);
+            lbo_m2.Add(A306.Get_Low_Buffet_M(h_middle, m: W_ceiling_middle, factor: factor));
+            ubo_m2.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h_middle,
+                W_ceiling_middle));
+
+            w2.Add(W_ceiling);
+            buffetM_W_ceiling = A306.Get_Low_Buffet_M(h_middle, m: W_ceiling, factor: factor);
+            lbo_m2.Add(buffetM_W_ceiling);
+            ubo_m2.Add(buffetM_W_ceiling);
+
+
+
+            for (double W = A306.m_max; ; W += 1000)
+            {
+                int comparePosition;
+                for (comparePosition = 0; comparePosition < UBO_Data_M.Count; comparePosition++)
+                {
+                    double TAS = UBO_Data_M[comparePosition] * AtmosphereEnviroment.Get_a(h_high);
+                    double CAS = AtmosphereEnviroment.Get_CAS(h_high, TAS);
+                    double C_L = A306.Get_C_L(h_high, CAS, m: W);
+                    if (C_L < UBO_Data_C_L_max[comparePosition]) break;
+                }
+                if (comparePosition == UBO_Data_M.Count)
+                {
+                    W_ceiling = W - 200;
+                    break;
+                }
+            }
+            W_ceiling_boundary = (int)(W_ceiling / 10000) * 10000;
+
+            for (double W = A306.m_min; W <= W_ceiling_boundary; W += 10000)
+            {
+                w3.Add(W);
+                lbo_m3.Add(A306.Get_Low_Buffet_M(h_high, m: W, factor: factor));
+                ubo_m3.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h_high, W));
+            }
+
+            W_ceiling_middle = w3[w3.Count - 1] + (W_ceiling - w3[w3.Count - 1]) / 1.3;
+            w3.Add(W_ceiling_middle);
+            lbo_m3.Add(A306.Get_Low_Buffet_M(h_high, m: W_ceiling_middle, factor: factor));
+            ubo_m3.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h_high,
+                W_ceiling_middle));
+
+            w3.Add(W_ceiling);
+            buffetM_W_ceiling = A306.Get_Low_Buffet_M(h_high, m: W_ceiling, factor: factor);
+            lbo_m3.Add(buffetM_W_ceiling);
+            ubo_m3.Add(buffetM_W_ceiling);
+
+
+            for (int i = 0; i < w1.Count; i++)
+                w1[i] /= 1000;
+            for (int i = 0; i < w2.Count; i++)
+                w2[i] /= 1000;
+            for (int i = 0; i < w3.Count; i++)
+                w3[i] /= 1000;
+
+
+            List<double> M_MO_m = new List<double>() { A306.M_MO, A306.M_MO };
+            List<double> M_MO_w = new List<double>() { 0, w1[w1.Count - 1] + w1[w1.Count - 1] * 0.01 };
+
+
+            chart1.ChartAreas[0].AxisX.Minimum = (int)((lbo_m1[0] - lbo_m1[0] * 0.05) * 20) * 0.05;
+            chart1.ChartAreas[0].AxisX.Maximum = (int)((ubo_m1[0] + ubo_m1[0] * 0.1) * 10) * 0.1;
+            chart1.ChartAreas[0].AxisX.LabelStyle.Interval = 0.05;
+            chart1.ChartAreas[0].AxisY.Minimum = w1[0];
+            chart1.ChartAreas[0].AxisY.Maximum = (int)((w1[w1.Count - 1] + w1[w1.Count - 1] * 0.1) / 10) * 10;
+            chart1.ChartAreas[0].AxisY.LabelStyle.Interval = 20;
+            chart1.Series[0].Points.DataBindXY(lbo_m1, w1);
+            chart1.Series[1].Points.DataBindXY(ubo_m1, w1);
+            chart1.Series[2].Points.DataBindXY(lbo_m2, w2);
+            chart1.Series[3].Points.DataBindXY(ubo_m2, w2);
+            chart1.Series[7].Points.DataBindXY(lbo_m3, w3);
+            chart1.Series[8].Points.DataBindXY(ubo_m3, w3);
+            chart1.Series[9].Points.DataBindXY(M_MO_m, M_MO_w);
+        */
+
+
+
+
+
+
+
+        /*18---------------------------------------------print buffet onset final envelope
+                public double Get_High_Buffet_M(string fileName, List<double> UBO_Data_M,
+            List<double> UBO_Data_C_L_max, double h, double m)
+        {
+            Aircraft A306 = new Aircraft(fileName);
+            double EPS = 0.001;
+
+            double upperM = UBO_Data_M[UBO_Data_M.Count - 1], lowerM = upperM;
+            for (int i = UBO_Data_M.Count - 1; i >= 0; i--)
+            {
+                double TAS = UBO_Data_M[i] * AtmosphereEnviroment.Get_a(h);
+                double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
+                double C_L = A306.Get_C_L(h, CAS, m: m);
+                if (UBO_Data_C_L_max[i] >= C_L && i + 1 < UBO_Data_M.Count)
+                {
+                    lowerM = UBO_Data_M[i];
+                    upperM = UBO_Data_M[i + 1];
+                    break;
+                }
+            }
+            int lowerMIndex = UBO_Data_M.IndexOf(lowerM);
+            int upperMIndex = UBO_Data_M.IndexOf(upperM);
+            double UBO_M;
+            for (UBO_M = lowerM; UBO_M <= upperM; UBO_M += 0.0001)
+            {
+                double C_L_max = UBO_Data_C_L_max[lowerMIndex] + (UBO_Data_C_L_max[upperMIndex] -
+                    UBO_Data_C_L_max[lowerMIndex]) / (upperM - lowerM) * (UBO_M - lowerM);
+
+                double TAS = UBO_M * AtmosphereEnviroment.Get_a(h);
+                double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
+                double C_L = A306.Get_C_L(h, CAS, m: m);
+                if (Math.Abs(C_L_max - C_L) < EPS) break;
+            }
+            return UBO_M;
+        }
+
+
+
+
+
+
+
+
+
+
+                        List<double> w1 = new List<double>();
+            List<double> lbo_m1 = new List<double>();
+            List<double> ubo_m1 = new List<double>();
+            List<double> w2 = new List<double>();
+            List<double> lbo_m2 = new List<double>();
+            List<double> ubo_m2 = new List<double>();
+            List<double> w3 = new List<double>();
+            List<double> lbo_m3 = new List<double>();
+            List<double> ubo_m3 = new List<double>();
+
+            double h_low = 33000;
+            double h_middle = 35000;
+            double h_high = 37000;
+
+
+            List<double> UBO_Data_M = new List<double>() { 0.2, 0.28, 0.36, 0.42, 0.46, 0.5, 0.54,
+                0.58, 0.61, 0.63, 0.65, 0.67, 0.69, 0.71, 0.73, 0.75, 0.77, 0.79, 0.81, 0.82 };
+            List<double> UBO_Data_C_L_max = new List<double>() { 1.3540, 1.2769, 1.1999, 1.1416,
+                1.1031, 1.0646, 1.0261, 0.9876, 0.9606, 0.9450, 0.9325, 0.9221, 0.9127, 0.9013,
+                0.8877, 0.8669, 0.8367, 0.7899, 0.7233, 0.6796 };
+            while (UBO_Data_M[0] > 0.01)
+            {
+                double insertM = UBO_Data_M[0] - 0.01;
+                UBO_Data_M.Insert(0, insertM);
+                double C_L_max = UBO_Data_C_L_max[0] + 0.01 * (UBO_Data_C_L_max[0] -
+                    UBO_Data_C_L_max[1]) / (UBO_Data_M[1] - UBO_Data_M[0]);
+                UBO_Data_C_L_max.Insert(0, C_L_max);
+            }
+            while (UBO_Data_M[UBO_Data_M.Count - 1] < 1.3)
+            {
+                double insertM = UBO_Data_M[UBO_Data_M.Count - 1] + 0.01;
+                double C_L_max = UBO_Data_C_L_max[UBO_Data_C_L_max.Count - 1] + 0.01 *
+                    (UBO_Data_C_L_max[UBO_Data_C_L_max.Count - 1] -
+                    UBO_Data_C_L_max[UBO_Data_C_L_max.Count - 2]) / (UBO_Data_M[UBO_Data_M.Count -
+                    1] - UBO_Data_M[UBO_Data_M.Count - 2]);
+                if (C_L_max <= 0) break;
+                UBO_Data_M.Add(insertM);
+                UBO_Data_C_L_max.Add(C_L_max);
+            }
+
+            double factor = 0.98;
+
+            for (int i = 0; i < UBO_Data_C_L_max.Count; i++)
+                UBO_Data_C_L_max[i] *= factor;
+
+            double W_ceiling = 0;
+            for (double W = A306.m_max; ; W += 1000)
+            {
+                int comparePosition;
+                for (comparePosition = 0; comparePosition < UBO_Data_M.Count; comparePosition++)
+                {
+                    double TAS = UBO_Data_M[comparePosition] * AtmosphereEnviroment.Get_a(h_low);
+                    double CAS = AtmosphereEnviroment.Get_CAS(h_low, TAS);
+                    double C_L = A306.Get_C_L(h_low, CAS, m: W);
+                    if (C_L < UBO_Data_C_L_max[comparePosition]) break;
+                }
+                if (comparePosition == UBO_Data_M.Count)
+                {
+                    W_ceiling = W - 200;
+                    break;
+                }
+            }
+            double W_ceiling_boundary = (int)(W_ceiling / 10000) * 10000;
+
+            for (double W = A306.m_min; W <= W_ceiling_boundary; W += 10000)
+            {
+                w1.Add(W);
+                lbo_m1.Add(A306.Get_Low_Buffet_M(h_low, m: W, factor: factor));
+                ubo_m1.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h_low, W));
+            }
+
+            double W_ceiling_middle = w1[w1.Count - 1] + (W_ceiling - w1[w1.Count - 1]) / 1.3;
+            w1.Add(W_ceiling_middle);
+            lbo_m1.Add(A306.Get_Low_Buffet_M(h_low, m: W_ceiling_middle, factor: factor));
+            ubo_m1.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h_low,
+                W_ceiling_middle));
+
+            w1.Add(W_ceiling);
+            double buffetM_W_ceiling = A306.Get_Low_Buffet_M(h_low, m: W_ceiling, factor: factor);
+            lbo_m1.Add(buffetM_W_ceiling);
+            ubo_m1.Add(buffetM_W_ceiling);
+
+
+
+            for (double W = A306.m_max; ; W += 1000)
+            {
+                int comparePosition;
+                for (comparePosition = 0; comparePosition < UBO_Data_M.Count; comparePosition++)
+                {
+                    double TAS = UBO_Data_M[comparePosition] * AtmosphereEnviroment.Get_a(h_middle);
+                    double CAS = AtmosphereEnviroment.Get_CAS(h_middle, TAS);
+                    double C_L = A306.Get_C_L(h_middle, CAS, m: W);
+                    if (C_L < UBO_Data_C_L_max[comparePosition]) break;
+                }
+                if (comparePosition == UBO_Data_M.Count)
+                {
+                    W_ceiling = W - 500;
+                    break;
+                }
+            }
+            W_ceiling_boundary = (int)(W_ceiling / 10000) * 10000;
+
+            for (double W = A306.m_min; W <= W_ceiling_boundary; W += 10000)
+            {
+                w2.Add(W);
+                lbo_m2.Add(A306.Get_Low_Buffet_M(h_middle, m: W, factor: factor));
+                ubo_m2.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h_middle, W));
+            }
+
+            W_ceiling_middle = w2[w2.Count - 1] + (W_ceiling - w2[w2.Count - 1]) / 1.3;
+            w2.Add(W_ceiling_middle);
+            lbo_m2.Add(A306.Get_Low_Buffet_M(h_middle, m: W_ceiling_middle, factor: factor));
+            ubo_m2.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h_middle,
+                W_ceiling_middle));
+
+            w2.Add(W_ceiling);
+            buffetM_W_ceiling = A306.Get_Low_Buffet_M(h_middle, m: W_ceiling, factor: factor);
+            lbo_m2.Add(buffetM_W_ceiling);
+            ubo_m2.Add(buffetM_W_ceiling);
+
+
+
+            for (double W = A306.m_max; ; W += 1000)
+            {
+                int comparePosition;
+                for (comparePosition = 0; comparePosition < UBO_Data_M.Count; comparePosition++)
+                {
+                    double TAS = UBO_Data_M[comparePosition] * AtmosphereEnviroment.Get_a(h_high);
+                    double CAS = AtmosphereEnviroment.Get_CAS(h_high, TAS);
+                    double C_L = A306.Get_C_L(h_high, CAS, m: W);
+                    if (C_L < UBO_Data_C_L_max[comparePosition]) break;
+                }
+                if (comparePosition == UBO_Data_M.Count)
+                {
+                    W_ceiling = W - 200;
+                    break;
+                }
+            }
+            W_ceiling_boundary = (int)(W_ceiling / 10000) * 10000;
+
+            for (double W = A306.m_min; W <= W_ceiling_boundary; W += 10000)
+            {
+                w3.Add(W);
+                lbo_m3.Add(A306.Get_Low_Buffet_M(h_high, m: W, factor: factor));
+                ubo_m3.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h_high, W));
+            }
+
+            W_ceiling_middle = w3[w3.Count - 1] + (W_ceiling - w3[w3.Count - 1]) / 1.3;
+            w3.Add(W_ceiling_middle);
+            lbo_m3.Add(A306.Get_Low_Buffet_M(h_high, m: W_ceiling_middle, factor: factor));
+            ubo_m3.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h_high,
+                W_ceiling_middle));
+
+            w3.Add(W_ceiling);
+            buffetM_W_ceiling = A306.Get_Low_Buffet_M(h_high, m: W_ceiling, factor: factor);
+            lbo_m3.Add(buffetM_W_ceiling);
+            ubo_m3.Add(buffetM_W_ceiling);
+
+
+            for (int i = 0; i < w1.Count; i++)
+                w1[i] /= 1000;
+            for (int i = 0; i < w2.Count; i++)
+                w2[i] /= 1000;
+            for (int i = 0; i < w3.Count; i++)
+                w3[i] /= 1000;
+
+
+            List<double> M_MO_m = new List<double>() { A306.M_MO };
+            List<double> M_MO_w = new List<double>() { 0 };
+
+
+            chart1.ChartAreas[0].AxisX.Minimum = (int)((lbo_m1[0] - lbo_m1[0] * 0.05) * 20) * 0.05;
+            chart1.ChartAreas[0].AxisX.Maximum = (int)((ubo_m1[0] + ubo_m1[0] * 0.1) * 10) * 0.1;
+            chart1.ChartAreas[0].AxisX.LabelStyle.Interval = 0.05;
+            chart1.ChartAreas[0].AxisY.Minimum = w1[0];
+            chart1.ChartAreas[0].AxisY.Maximum = (int)((w1[w1.Count - 1] + w1[w1.Count - 1] * 0.1) / 10) * 10;
+            chart1.ChartAreas[0].AxisY.LabelStyle.Interval = 20;
+            chart1.Series[0].Points.DataBindXY(lbo_m1, w1);
+            chart1.Series[2].Points.DataBindXY(lbo_m2, w2);
+            chart1.Series[7].Points.DataBindXY(lbo_m3, w3);
+
+
+            while (ubo_m1[0] > M_MO_m[0])
+            {
+                ubo_m1.Remove(ubo_m1[0]);
+                w1.Remove(w1[0]);
+            }
+            while (ubo_m2[0] > M_MO_m[0])
+            {
+                ubo_m2.Remove(ubo_m2[0]);
+                w2.Remove(w2[0]);
+            } while (ubo_m3[0] > M_MO_m[0])
+            {
+                ubo_m3.Remove(ubo_m3[0]);
+                w3.Remove(w3[0]);
+            }
+
+            double EPS = 0.001;
+
+            ubo_m1.Insert(0, M_MO_m[0]);
+            double M_MO_W;
+            for (M_MO_W = w1[w1.Count - 1] * 1000; ; M_MO_W -= 1000)
+            {
+                double buffet_high = Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max,
+                    h_low, M_MO_W);
+                if (Math.Abs(buffet_high - M_MO_m[0]) < EPS) break;
+            }
+            w1.Insert(0, M_MO_W / 1000);
+
+            ubo_m2.Insert(0, M_MO_m[0]);
+            for (M_MO_W = w2[w2.Count - 1] * 1000; ; M_MO_W -= 1000)
+            {
+                double buffet_high = Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max,
+                    h_middle, M_MO_W);
+                if (Math.Abs(buffet_high - M_MO_m[0]) < EPS) break;
+            }
+            w2.Insert(0, M_MO_W / 1000);
+
+            ubo_m3.Insert(0, M_MO_m[0]);
+            for (M_MO_W = w3[w3.Count - 1] * 1000; ; M_MO_W -= 1000)
+            {
+                double buffet_high = Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max,
+                    h_high, M_MO_W);
+                if (Math.Abs(buffet_high - M_MO_m[0]) < EPS) break;
+            }
+            w3.Insert(0, M_MO_W / 1000);
+
+            M_MO_m.Add(M_MO_m[0]);
+            M_MO_w.Add(w1[0]);
+
+            chart1.Series[1].Points.DataBindXY(ubo_m1, w1);
+            chart1.Series[3].Points.DataBindXY(ubo_m2, w2);
+            chart1.Series[8].Points.DataBindXY(ubo_m3, w3);
+            chart1.Series[9].Points.DataBindXY(M_MO_m, M_MO_w);
+        */
+
+
+
+
+
+
+
+        /*19--------------------------------------------------------print CG - v fig
                     List<double> cg = new List<double>();
         List<double> tas = new List<double>();
 
@@ -1454,7 +2433,7 @@ namespace project1_mod1_outwindow
 
 
 
-        /*17------------------------------------------------------print ROCD - v during climb
+        /*20------------------------------------------------------print ROCD - v during climb
                     List<double> rocd = new List<double>();
         List<double> tas = new List<double>();
 
@@ -1508,7 +2487,7 @@ namespace project1_mod1_outwindow
 
 
 
-        /*18----------------------------------------------print DG - v fig and mark v_e
+        /*21----------------------------------------------print DG - v fig and mark v_e
             List<double> tas = new List<double>();
             List<double> dg = new List<double>();
 
@@ -1545,7 +2524,7 @@ namespace project1_mod1_outwindow
 
 
 
-        /*19------------------------------------print ROCD - v during descent and mark v_e
+        /*22------------------------------------print ROCD - v during descent and mark v_e
                     List<double> tas = new List<double>();
         List<double> rocd = new List<double>();
         List<double> slope = new List<double>();
@@ -1584,7 +2563,7 @@ namespace project1_mod1_outwindow
 
 
 
-        /*20---------------------------------print SR - v fig and mark MRC, LRC, ConstM cruise
+        /*23---------------------------------print SR - v fig and mark MRC, LRC, ConstM cruise
                     List<double> tas = new List<double>();
         List<double> sr = new List<double>();
         List<double> sr1 = new List<double>();
@@ -1679,7 +2658,7 @@ namespace project1_mod1_outwindow
 
 
 
-        /*21---------------------------------------print h - SR fig and optimal altitude
+        /*24---------------------------------------print h - SR fig and optimal altitude
         List<double> h = new List<double>();
         List<double> sr = new List<double>();
         List<double> sr1 = new List<double>();
@@ -1734,7 +2713,7 @@ namespace project1_mod1_outwindow
 
 
 
-        /*22-----------------------print balanced field length fig and mark BFL and BFL_v1
+        /*25-----------------------print balanced field length fig and mark BFL and BFL_v1
         public delegate double Handler(string fileName, double numberOfEngines, double CAS);
 
         public List<double> BisectionRootsCalculation(double lowerBoundary,
@@ -1899,6 +2878,7 @@ namespace project1_mod1_outwindow
 
 
 
+            
         private void button1_Click(object sender, EventArgs e)
         {
             // *************************************************************//
@@ -1906,9 +2886,6 @@ namespace project1_mod1_outwindow
             string fileName = $@"{path}\A306.txt";
             Aircraft A306 = new Aircraft(fileName);
             // ************************************************************//
-
-
-
 
 
 

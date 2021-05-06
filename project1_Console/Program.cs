@@ -166,15 +166,15 @@ namespace project1
             Console.WriteLine("File loading succeeded.");
 
 
-            //for (double h = 16000; h <= 38000; h += 1000)
+            //for (double h = 16000; h <= 39000; h += 1000)
             //{
-            //    Console.WriteLine($"{A306.SolveBuffetingM(h)}");
+            //    Console.WriteLine($"{A306.Get_Low_Buffet_M(h, factor : 0.98)}");
             //}
 
 
             //for (double h = 16000; h <= 30000; h += 1000)
             //{
-            //    double TAS_buffet = A306.SolveBuffetingM(h) * AtmosphereEnviroment.Get_a(h);
+            //    double TAS_buffet = A306.Get_Low_Buffet_M(h, factor: 0.98) * AtmosphereEnviroment.Get_a(h);
             //    double TAS_stall = AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(A306.Get_v_stall(h, Aircraft.FlightPhase.Climb)));
             //    double TAS_vmin = AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(A306.Get_v_min(h, Aircraft.FlightPhase.Climb)));
             //    TAS_buffet = Math.Round(TAS_buffet, 3);
@@ -190,7 +190,6 @@ namespace project1
 
 
 
-            return;
         }
     }
 }

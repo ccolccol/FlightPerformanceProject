@@ -62,7 +62,7 @@ namespace AtmosphereModel
             }
         }
 
-        /// <summary> [Manual p.11] Get air density on given altitude in m/s2.
+        /// <summary> [Manual p.11] Get air density on given altitude in kg/m3.
         /// </summary>
         public static double Get_rho(double h, double DeltaISA = 0)
         {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using AtmosphereModel;
 using DataImport;
 
@@ -435,26 +436,24 @@ namespace AircraftModel
 
 
 
-        /// <summary> [Manual p.19 and 83] Get low speed buffeting limit Mach. 
-        /// Aircraft weight is set to reference weight.
+        /// <summary> (Use Get_Low_Buffet_M() instead) [Manual p.19 and 83] Get low speed buffeting 
+        /// limit Mach. Aircraft weight is set to reference weight.
         /// </summary>
         public double SolveBuffetingM(double h, double DeltaISA = 0)
         {
             return SolveBuffetingM(h, m_ref, DeltaISA);
         }
-        /// <summary> [Manual p.19 and 83] Get low speed buffeting limit Mach.
+        /// <summary> (Use Get_Low_Buffet_M() instead) [Manual p.19 and 83] Get low speed buffeting 
+        /// limit Mach.
         /// </summary>
         public double SolveBuffetingM(double h, double m, double DeltaISA = 0)
         {
-            double factor = 1.3; // ????
-
-
             double M = 0;
             double W = m * AtmosphereEnviroment.g;
             double P = AtmosphereEnviroment.Get_P(h, DeltaISA);
             double a1 = (-1) * C_lbo / k;
             double a2 = 0; 
-            double a3 = W / (factor * S) / (0.583 * k * P);
+            double a3 = W / S / (0.583 * k * P);
             double Q = (3 * a2 - a1 * a1) / 9;
             double R = (9 * a1 * a2 - 27 * a3 - 2 * a1 * a1 * a1) / 54;
             double Delta = Q * Q * Q + R * R;
@@ -490,6 +489,84 @@ namespace AircraftModel
             return Math.Round(M, 3);
         }
 
+
+
+        /// <summary> [Added] Get low speed buffeting limit Mach. Use B737-800 buffet boundary as 
+        /// reference. Set factor between 0.95 to 1.05 as correction of A/C type. 
+        /// Note CG in percentage of MAC. Aircraft weight is set to reference weight.
+        /// </summary>
+        public double Get_Low_Buffet_M(double h, double factor = 1, double CG = 26.2, 
+            double DeltaISA = 0, double phi = 0)
+        {
+            return Get_Low_Buffet_M(h, m_ref, factor, CG, DeltaISA, phi);
+        }
+        /// <summary> [Added] Get low speed buffeting limit Mach. Use B737-800 buffet boundary as 
+        /// reference. Set factor between 0.95 to 1.05 as correction of A/C type. 
+        /// Note CG in percentage of MAC.
+        /// </summary>
+        public double Get_Low_Buffet_M(double h, double m, double factor = 1, double CG = 26.2, 
+            double DeltaISA = 0, double phi = 0)
+        {
+            if (factor < 0.95 || factor > 1.05)
+                return -1;
+            double LBO_M = 0;
+            double EPS = 0.01;
+
+            List<double> UBO_Data_M = new List<double>() { 0.2, 0.28, 0.36, 0.42, 0.46, 0.5, 0.54,
+                0.58, 0.61, 0.63, 0.65, 0.67, 0.69, 0.71, 0.73, 0.75, 0.77, 0.79, 0.81, 0.82 };
+            List<double> UBO_Data_C_L_max = new List<double>() { 1.3540, 1.2769, 1.1999, 1.1416,
+                1.1031, 1.0646, 1.0261, 0.9876, 0.9606, 0.9450, 0.9325, 0.9221, 0.9127, 0.9013,
+                0.8877, 0.8669, 0.8367, 0.7899, 0.7233, 0.6796 };
+            while(UBO_Data_M[0] > 0.01)
+            {
+                double insertM = UBO_Data_M[0] - 0.01;
+                UBO_Data_M.Insert(0, insertM);
+                double C_L_max = UBO_Data_C_L_max[0] + 0.01 * (UBO_Data_C_L_max[0] - 
+                    UBO_Data_C_L_max[1]) / (UBO_Data_M[1] - UBO_Data_M[0]);
+                UBO_Data_C_L_max.Insert(0, C_L_max);
+            }
+            while (UBO_Data_M[UBO_Data_M.Count - 1] < 1.3)
+            {
+                double insertM = UBO_Data_M[UBO_Data_M.Count - 1] + 0.01;
+                double C_L_max = UBO_Data_C_L_max[UBO_Data_C_L_max.Count - 1] + 0.01 * 
+                    (UBO_Data_C_L_max[UBO_Data_C_L_max.Count - 1] - 
+                    UBO_Data_C_L_max[UBO_Data_C_L_max.Count - 2]) / (UBO_Data_M[UBO_Data_M.Count - 
+                    1] - UBO_Data_M[UBO_Data_M.Count - 2]);
+                if (C_L_max <= 0) break;
+                UBO_Data_M.Add(insertM);
+                UBO_Data_C_L_max.Add(C_L_max);
+            }
+            for (int i = 0; i < UBO_Data_C_L_max.Count; i++)
+                UBO_Data_C_L_max[i] *= (1 + 0.26647 * (CG / 100.0 - 0.262)) * factor;
+                
+            double lowerM = UBO_Data_M[0];
+            double upperM = UBO_Data_M[UBO_Data_M.Count - 1];
+            foreach(double M in UBO_Data_M)
+            {
+                double TAS = M * AtmosphereEnviroment.Get_a(h, DeltaISA);
+                double CAS = AtmosphereEnviroment.Get_CAS(h, TAS, DeltaISA);
+                double C_L = Get_C_L(h, CAS, m, DeltaISA, phi);
+                if(UBO_Data_C_L_max[UBO_Data_M.IndexOf(M)] > C_L)
+                {
+                    lowerM = UBO_Data_M[UBO_Data_M.IndexOf(M) - 1];
+                    upperM = M;
+                    break;
+                }
+            }
+            int lowerMIndex = UBO_Data_M.IndexOf(lowerM);
+            int upperMIndex = UBO_Data_M.IndexOf(upperM);
+            for (LBO_M = lowerM; LBO_M <= upperM; LBO_M += 0.001)
+            {
+                double TAS = LBO_M * AtmosphereEnviroment.Get_a(h, DeltaISA);
+                double CAS = AtmosphereEnviroment.Get_CAS(h, TAS, DeltaISA);
+                double C_L = Get_C_L(h, CAS, m, DeltaISA, phi);
+                double UBO_C_L = UBO_Data_C_L_max[lowerMIndex] + (UBO_Data_C_L_max[upperMIndex] - 
+                    UBO_Data_C_L_max[lowerMIndex]) / (upperM - lowerM) * (LBO_M - lowerM);
+                if (Math.Abs(C_L - UBO_C_L) < EPS) break;
+            }
+            return LBO_M;
+        }
+        
 
 
         /// <summary> [Manual p.16-17] Get stall airspeed(CAS) in kt during different 
@@ -535,15 +612,16 @@ namespace AircraftModel
         /// <summary> [Manual p.16] Get minimum airspeed(CAS) in kt during different 
         /// flight phases. Aircraft weight is set to reference weight.
         /// </summary>
-        public double Get_v_min(double h, FlightPhase flightPhase, double DeltaISA = 0)
+        public double Get_v_min(double h, FlightPhase flightPhase, double factor = 1, double CG = 26.2,
+            double DeltaISA = 0, double phi = 0)
         {
-            return Get_v_min(h, flightPhase, m_ref, DeltaISA);
+            return Get_v_min(h, flightPhase, m_ref, factor, CG, DeltaISA, phi);
         }
         /// <summary> [Manual p.16] Get minimum airspeed(CAS) in kt during different 
         /// flight phases.
         /// </summary>
-        public double Get_v_min(double h, FlightPhase flightPhase, double m,
-            double DeltaISA = 0)
+        public double Get_v_min(double h, FlightPhase flightPhase, double m, double factor = 1,
+            double CG = 26.2, double DeltaISA = 0, double phi = 0)
         {
             double v_min = 0;
             if (h >= 0 && h <= H_max_TO && flightPhase == FlightPhase.Takeoff)
@@ -554,13 +632,12 @@ namespace AircraftModel
                     v_min = Math.Max(
                         C_v_min * CorrectV(Get_v_stall(h, flightPhase, m, DeltaISA), m),
                         CorrectV(Units.mps2kt(AtmosphereEnviroment.Get_CAS(h,
-                        SolveBuffetingM(h, m, DeltaISA)
+                        Get_Low_Buffet_M(h, m, factor, CG, DeltaISA, phi)
                         * AtmosphereEnviroment.Get_a(h, DeltaISA), DeltaISA)), m));
                 else
                     v_min = C_v_min * CorrectV(Get_v_stall(h, flightPhase, m, DeltaISA), m);
             }
-            return v_min;
-            //return Math.Round(v_min, 0);
+            return Math.Round(v_min, 0);
         }
 
 
