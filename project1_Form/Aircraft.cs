@@ -452,7 +452,7 @@ namespace AircraftModel
             double W = m * AtmosphereEnviroment.g;
             double P = AtmosphereEnviroment.Get_P(h, DeltaISA);
             double a1 = (-1) * C_lbo / k;
-            double a2 = 0; 
+            double a2 = 0;
             double a3 = W / S / (0.583 * k * P);
             double Q = (3 * a2 - a1 * a1) / 9;
             double R = (9 * a1 * a2 - 27 * a3 - 2 * a1 * a1 * a1) / 54;
@@ -495,7 +495,7 @@ namespace AircraftModel
         /// reference. Set factor between 0.95 to 1.05 as correction of A/C type. 
         /// Note CG in percentage of MAC. Aircraft weight is set to reference weight.
         /// </summary>
-        public double Get_Low_Buffet_M(double h, double factor = 1, double CG = 26.2, 
+        public double Get_Low_Buffet_M(double h, double factor = 1, double CG = 26.2,
             double DeltaISA = 0, double phi = 0)
         {
             return Get_Low_Buffet_M(h, m_ref, factor, CG, DeltaISA, phi);
@@ -504,7 +504,7 @@ namespace AircraftModel
         /// reference. Set factor between 0.95 to 1.05 as correction of A/C type. 
         /// Note CG in percentage of MAC.
         /// </summary>
-        public double Get_Low_Buffet_M(double h, double m, double factor = 1, double CG = 26.2, 
+        public double Get_Low_Buffet_M(double h, double m, double factor = 1, double CG = 26.2,
             double DeltaISA = 0, double phi = 0)
         {
             if (factor < 0.95 || factor > 1.05)
@@ -517,20 +517,20 @@ namespace AircraftModel
             List<double> UBO_Data_C_L_max = new List<double>() { 1.3540, 1.2769, 1.1999, 1.1416,
                 1.1031, 1.0646, 1.0261, 0.9876, 0.9606, 0.9450, 0.9325, 0.9221, 0.9127, 0.9013,
                 0.8877, 0.8669, 0.8367, 0.7899, 0.7233, 0.6796 };
-            while(UBO_Data_M[0] > 0.01)
+            while (UBO_Data_M[0] > 0.01)
             {
                 double insertM = UBO_Data_M[0] - 0.01;
                 UBO_Data_M.Insert(0, insertM);
-                double C_L_max = UBO_Data_C_L_max[0] + 0.01 * (UBO_Data_C_L_max[0] - 
+                double C_L_max = UBO_Data_C_L_max[0] + 0.01 * (UBO_Data_C_L_max[0] -
                     UBO_Data_C_L_max[1]) / (UBO_Data_M[1] - UBO_Data_M[0]);
                 UBO_Data_C_L_max.Insert(0, C_L_max);
             }
             while (UBO_Data_M[UBO_Data_M.Count - 1] < 1.3)
             {
                 double insertM = UBO_Data_M[UBO_Data_M.Count - 1] + 0.01;
-                double C_L_max = UBO_Data_C_L_max[UBO_Data_C_L_max.Count - 1] + 0.01 * 
-                    (UBO_Data_C_L_max[UBO_Data_C_L_max.Count - 1] - 
-                    UBO_Data_C_L_max[UBO_Data_C_L_max.Count - 2]) / (UBO_Data_M[UBO_Data_M.Count - 
+                double C_L_max = UBO_Data_C_L_max[UBO_Data_C_L_max.Count - 1] + 0.01 *
+                    (UBO_Data_C_L_max[UBO_Data_C_L_max.Count - 1] -
+                    UBO_Data_C_L_max[UBO_Data_C_L_max.Count - 2]) / (UBO_Data_M[UBO_Data_M.Count -
                     1] - UBO_Data_M[UBO_Data_M.Count - 2]);
                 if (C_L_max <= 0) break;
                 UBO_Data_M.Add(insertM);
@@ -538,15 +538,15 @@ namespace AircraftModel
             }
             for (int i = 0; i < UBO_Data_C_L_max.Count; i++)
                 UBO_Data_C_L_max[i] *= (1 + 0.26647 * (CG / 100.0 - 0.262)) * factor;
-                
+
             double lowerM = UBO_Data_M[0];
             double upperM = UBO_Data_M[UBO_Data_M.Count - 1];
-            foreach(double M in UBO_Data_M)
+            foreach (double M in UBO_Data_M)
             {
                 double TAS = M * AtmosphereEnviroment.Get_a(h, DeltaISA);
                 double CAS = AtmosphereEnviroment.Get_CAS(h, TAS, DeltaISA);
                 double C_L = Get_C_L(h, CAS, m, DeltaISA, phi);
-                if(UBO_Data_C_L_max[UBO_Data_M.IndexOf(M)] > C_L)
+                if (UBO_Data_C_L_max[UBO_Data_M.IndexOf(M)] > C_L)
                 {
                     lowerM = UBO_Data_M[UBO_Data_M.IndexOf(M) - 1];
                     upperM = M;
@@ -560,13 +560,13 @@ namespace AircraftModel
                 double TAS = LBO_M * AtmosphereEnviroment.Get_a(h, DeltaISA);
                 double CAS = AtmosphereEnviroment.Get_CAS(h, TAS, DeltaISA);
                 double C_L = Get_C_L(h, CAS, m, DeltaISA, phi);
-                double UBO_C_L = UBO_Data_C_L_max[lowerMIndex] + (UBO_Data_C_L_max[upperMIndex] - 
+                double UBO_C_L = UBO_Data_C_L_max[lowerMIndex] + (UBO_Data_C_L_max[upperMIndex] -
                     UBO_Data_C_L_max[lowerMIndex]) / (upperM - lowerM) * (LBO_M - lowerM);
                 if (Math.Abs(C_L - UBO_C_L) < EPS) break;
             }
             return LBO_M;
         }
-        
+
 
 
         /// <summary> [Manual p.16-17] Get stall airspeed(CAS) in kt during different 
@@ -880,12 +880,12 @@ namespace AircraftModel
 
         public enum SpeedMode
         {
-            CAS,
-            Mach
+            ConstantCAS,
+            ConstantMach
         }
 
-        /// <summary> [Manual p.9-10] Get value of f{M}. Select SpeedMode to identify 
-        /// type of airspeed. Note that CAS is in m/s if selecting CAS mode.
+        /// <summary> [Manual p.9-10] Get value of f{M}. Select SpeedMode to type of airspeed 
+        /// being maintained. Note that CAS is in m/s if selecting ConstantCAS mode.
         /// </summary>
         public double Get_functionM(double h, SpeedMode speedMode, double airspeed,
             double DeltaISA = 0, AttitudeAndMovement attitudeAndMovement =
@@ -910,7 +910,7 @@ namespace AircraftModel
 
                 default:
                     double h_trop = AtmosphereEnviroment.Get_h_trop(DeltaISA);
-                    if (speedMode == SpeedMode.Mach)
+                    if (speedMode == SpeedMode.ConstantMach)
                     {
                         if (airspeed >= 0 && airspeed <= 2)
                         {
@@ -941,29 +941,45 @@ namespace AircraftModel
 
 
         /// <summary> [Manual p.8 and 22] Get rate of climb(positive value) or 
-        /// descent(negative value) in ft/min. Set reducedFlag to true when reduced 
-        /// climb power deployed. Set expediteDescentFlag to true in expedited descent. 
-        /// Aircraft weight is set to reference weight.
+        /// descent(negative value) in ft/min. Select SpeedMode to type of airspeed being 
+        /// maintained. Note that CAS is in m/s if selecting ConstantCAS mode. Set reducedFlag 
+        /// to true when reduced climb power deployed. Set expediteDescentFlag to true in 
+        /// expedited descent. Aircraft weight is set to reference weight.
         /// </summary>
-        public double Get_ROCD(double h, double CAS, FlightPhase flightPhase,
-            AttitudeAndMovement attitudeAndMovement = AttitudeAndMovement.ConstantSpeed,
-            double DeltaISA = 0, double phi = 0, bool reduceFlag = false,
-            bool expediteDescentFlag = false)
+        public double Get_ROCD(double h, SpeedMode speedMode, double airspeed,
+            FlightPhase flightPhase, AttitudeAndMovement attitudeAndMovement =
+            AttitudeAndMovement.ConstantSpeed, double DeltaISA = 0, double phi = 0,
+            bool reduceFlag = false, bool expediteDescentFlag = false)
         {
-            return Get_ROCD(h, CAS, flightPhase, m_ref,
+            return Get_ROCD(h, speedMode, airspeed, flightPhase, m_ref,
                 attitudeAndMovement, DeltaISA, phi, reduceFlag, expediteDescentFlag);
         }
         /// <summary> [Manual p.8 and 22] Get rate of climb(positive value) or 
-        /// descent(negative value) in ft/min. Set reducedFlag to true when reduced 
-        /// climb power deployed. Set expediteDescentFlag to true in expedited descent.
+        /// descent(negative value) in ft/min. Select SpeedMode to type of airspeed being 
+        /// maintained. Note that CAS is in m/s if selecting ConstantCAS mode. Set reducedFlag 
+        /// to true when reduced climb power deployed. Set expediteDescentFlag to true in 
+        /// expedited descent.
         /// </summary>
-        public double Get_ROCD(double h, double CAS, FlightPhase flightPhase, double m,
-            AttitudeAndMovement attitudeAndMovement = AttitudeAndMovement.ConstantSpeed,
-            double DeltaISA = 0, double phi = 0, bool reduceFlag = false,
-            bool expediteDescentFlag = false)
+        public double Get_ROCD(double h, SpeedMode speedMode, double airspeed, FlightPhase
+            flightPhase, double m, AttitudeAndMovement attitudeAndMovement =
+            AttitudeAndMovement.ConstantSpeed, double DeltaISA = 0, double phi = 0,
+            bool reduceFlag = false, bool expediteDescentFlag = false)
         {
             double ROCD = 0;
             double h_max = Get_h_max_act(m, DeltaISA);
+
+            double CAS = 0;
+            switch (speedMode)
+            {
+                case SpeedMode.ConstantCAS:
+                    CAS = airspeed;
+                    break;
+                default:
+                    if (airspeed >= 0 && airspeed <= 2)
+                        CAS = AtmosphereEnviroment.Get_CAS(h, airspeed *
+                            AtmosphereEnviroment.Get_a(h, DeltaISA), DeltaISA);
+                    break;
+            }
 
             double D = 0;
             if (expediteDescentFlag)
@@ -972,8 +988,21 @@ namespace AircraftModel
                 D = Get_D(h, CAS, flightPhase, m, DeltaISA, phi);
 
             double TAS = AtmosphereEnviroment.Get_TAS(h, CAS, DeltaISA);
-            double functionM = Get_functionM(h, SpeedMode.CAS, CAS, DeltaISA,
-                attitudeAndMovement);
+
+            double functionM = 0;
+            switch (speedMode)
+            {
+                case SpeedMode.ConstantCAS:
+                    functionM = Get_functionM(h, SpeedMode.ConstantCAS, CAS, DeltaISA,
+                        attitudeAndMovement);
+                    break;
+                default:
+                    if (airspeed >= 0 && airspeed <= 2)
+                        functionM = Get_functionM(h, SpeedMode.ConstantMach, airspeed, DeltaISA,
+                            attitudeAndMovement);
+                    break;
+            }
+
             double g = AtmosphereEnviroment.g;
 
             if (h < 0.8 * h_max && flightPhase == FlightPhase.Climb && reduceFlag)
@@ -1000,7 +1029,7 @@ namespace AircraftModel
         /// <summary> [Manual p.23-24] Get fuel flow in kg/min. Select ThrustMode to 
         /// thrust mode being used. Aircraft weight is set to reference weight.
         /// </summary>
-        public double Get_ff(FlightPhase flightPhase, double h = -1, double CAS = -1, 
+        public double Get_ff(FlightPhase flightPhase, double h = -1, double CAS = -1,
             ThrustMode thrustMode = ThrustMode.Normal, double DeltaISA = 0, double phi = 0)
         {
             return Get_ff(flightPhase, m_ref, h, CAS, thrustMode, DeltaISA, phi);
@@ -1027,7 +1056,7 @@ namespace AircraftModel
                 }
             else
             {
-                if (flightPhase == FlightPhase.Descent && 
+                if (flightPhase == FlightPhase.Descent &&
                     thrustMode == ThrustMode.IdleThrust && h != -1)
                     ff = C_f3 * (1 - h / C_f4);
                 else
@@ -1039,7 +1068,7 @@ namespace AircraftModel
                         bool maxCruiseThrustFlag = false;
                         if (thrustMode == ThrustMode.MaximumCruiseThrust)
                             maxCruiseThrustFlag = true;
-                        double T = Get_T(h, CAS, flightPhase, m, DeltaISA, phi, 
+                        double T = Get_T(h, CAS, flightPhase, m, DeltaISA, phi,
                             maxCruiseThrustFlag) / 1000;
                         double eta = 0;
                         switch (e_index)
@@ -1337,18 +1366,18 @@ namespace AircraftModel
         /// Take-off weight is set to maximum weight.
         /// </summary>
         public double Get_Takeoff_Distance(int numberOfEngines, double h = 0,
-            double TOGA_ClimbEngineRatio = 1.03, double climbEngineLapseRate = 0.803, 
-            TakeoffRunwayCondition takeoffRunwayCondition = TakeoffRunwayCondition.Paved, 
+            double TOGA_ClimbEngineRatio = 1.03, double climbEngineLapseRate = 0.803,
+            TakeoffRunwayCondition takeoffRunwayCondition = TakeoffRunwayCondition.Paved,
             double n = 1.2, double screenHeight = 35, double DeltaISA = 0)
         {
-            return Get_Takeoff_Distance(numberOfEngines, m_max, h, TOGA_ClimbEngineRatio, 
+            return Get_Takeoff_Distance(numberOfEngines, m_max, h, TOGA_ClimbEngineRatio,
                 climbEngineLapseRate, takeoffRunwayCondition, n, screenHeight, DeltaISA);
         }
         /// <summary> [Book p.228-232, 247-248] Get take-off distance in m.
         /// </summary>
         public double Get_Takeoff_Distance(int numberOfEngines, double takeoffWeight, double h = 0,
-            double TOGA_ClimbEngineRatio = 1.03, double climbEngineLapseRate = 0.803, 
-            TakeoffRunwayCondition takeoffRunwayCondition = TakeoffRunwayCondition.Paved, 
+            double TOGA_ClimbEngineRatio = 1.03, double climbEngineLapseRate = 0.803,
+            TakeoffRunwayCondition takeoffRunwayCondition = TakeoffRunwayCondition.Paved,
             double n = 1.2, double screenHeight = 35, double DeltaISA = 0)
         {
             double totalDistance = 0;
@@ -1372,15 +1401,15 @@ namespace AircraftModel
                     break;
             }
             double v_LOF = Units.kt2mps(1.1 * v_stall_TO);
-            double T = TOGA_ClimbEngineRatio * numberOfEngines * Get_T(h, v_LOF, FlightPhase.Climb, 
-                m : takeoffWeight, DeltaISA: DeltaISA);
+            double T = TOGA_ClimbEngineRatio * numberOfEngines * Get_T(h, v_LOF, FlightPhase.Climb,
+                m: takeoffWeight, DeltaISA: DeltaISA);
             double W = takeoffWeight * AtmosphereEnviroment.g;
             double K_T = T / W - mu;
             double rho = AtmosphereEnviroment.Get_rho(h, DeltaISA);
-            double C_L_max = Get_C_L(h, Units.kt2mps(v_stall_TO), DeltaISA : DeltaISA);
+            double C_L_max = Get_C_L(h, Units.kt2mps(v_stall_TO), DeltaISA: DeltaISA);
             double C_D = C_D0_CR + C_D2_CR * C_L_max * C_L_max;
             double K_A = rho * (-1) * (C_D + mu * C_L_max) / (2 * W / S);
-            double S_G = 1 / (2 * AtmosphereEnviroment.g * K_A) * Math.Log((K_T + 
+            double S_G = 1 / (2 * AtmosphereEnviroment.g * K_A) * Math.Log((K_T +
                 K_A * v_LOF * v_LOF) / K_T);
 
             double v_2 = Units.kt2mps(1.2 * v_stall_TO);
@@ -1411,36 +1440,36 @@ namespace AircraftModel
         }
 
 
-        
+
         public enum Balanced_Field_LengthType
         {
             AccelerateGo,
             AccelerateStop
         }
-        
+
         /// <summary> [Book p.232-233, 248-250] Get balanced field length in m with one engine 
         /// out. Engine failure speed(v1) is m/s and cannot exceed maximum v1. 
         /// Take-off weight is set to maximum weight.
         /// </summary>
-        public double Get_Balanced_Field_Length(int numberOfEngines, double v_1, 
-            Balanced_Field_LengthType balancedFieldLengthType, double h = 0, 
-            double TOGA_ClimbEngineRatio = 1.03, double transitionEngineLapseRate = 1, 
-            double climbEngineLapseRate = 1, 
-            TakeoffRunwayCondition takeoffRunwayCondition = TakeoffRunwayCondition.Paved, 
+        public double Get_Balanced_Field_Length(int numberOfEngines, double v_1,
+            Balanced_Field_LengthType balancedFieldLengthType, double h = 0,
+            double TOGA_ClimbEngineRatio = 1.03, double transitionEngineLapseRate = 1,
+            double climbEngineLapseRate = 1,
+            TakeoffRunwayCondition takeoffRunwayCondition = TakeoffRunwayCondition.Paved,
             double n = 1.2, double screenHeight = 35, double DeltaISA = 0)
         {
-            return Get_Balanced_Field_Length(numberOfEngines, v_1, balancedFieldLengthType, 
-                m_max, h, TOGA_ClimbEngineRatio, transitionEngineLapseRate, climbEngineLapseRate, 
+            return Get_Balanced_Field_Length(numberOfEngines, v_1, balancedFieldLengthType,
+                m_max, h, TOGA_ClimbEngineRatio, transitionEngineLapseRate, climbEngineLapseRate,
                 takeoffRunwayCondition, n, screenHeight, DeltaISA);
         }
         /// <summary> [Book p.232-233, 248-250] Get balanced field length in m with one engine 
         /// out. Engine failure speed(v1) is m/s and cannot exceed maximum v1.
         /// </summary>
-        public double Get_Balanced_Field_Length(int numberOfEngines, double v_1, 
-            Balanced_Field_LengthType balancedFieldLengthType, double takeoffWeight, 
-            double h = 0, double TOGA_ClimbEngineRatio = 1.03, double transitionEngineLapseRate = 1, 
-            double climbEngineLapseRate = 1, 
-            TakeoffRunwayCondition takeoffRunwayCondition = TakeoffRunwayCondition.Paved, 
+        public double Get_Balanced_Field_Length(int numberOfEngines, double v_1,
+            Balanced_Field_LengthType balancedFieldLengthType, double takeoffWeight,
+            double h = 0, double TOGA_ClimbEngineRatio = 1.03, double transitionEngineLapseRate = 1,
+            double climbEngineLapseRate = 1,
+            TakeoffRunwayCondition takeoffRunwayCondition = TakeoffRunwayCondition.Paved,
             double n = 1.2, double screenHeight = 35, double DeltaISA = 0)
         {
             double totalDistance = 0;
@@ -1466,7 +1495,7 @@ namespace AircraftModel
                     mu = 0.6;
                     break;
             }
-            double T = TOGA_ClimbEngineRatio * numberOfEngines * Get_T(h, v_1, FlightPhase.Climb, 
+            double T = TOGA_ClimbEngineRatio * numberOfEngines * Get_T(h, v_1, FlightPhase.Climb,
                 DeltaISA: DeltaISA);
             double W = takeoffWeight * AtmosphereEnviroment.g;
             double K_T = T / W - mu;
@@ -1474,14 +1503,14 @@ namespace AircraftModel
             double C_L_max = Get_C_L(h, Units.kt2mps(v_stall_TO), DeltaISA: DeltaISA);
             double C_D = C_D0_CR + C_D2_CR * C_L_max * C_L_max;
             double K_A = rho * (-1) * (C_D + mu * C_L_max) / (2 * W / S);
-            double S_G = 1 / (2 * AtmosphereEnviroment.g * K_A) * Math.Log((K_T + 
+            double S_G = 1 / (2 * AtmosphereEnviroment.g * K_A) * Math.Log((K_T +
                 K_A * v_1 * v_1) / K_T);
-            
+
             double S_reaction = 2 * v_1;
 
             double v_LOF = Units.kt2mps(1.1 * v_stall_TO);
             double v_m = (v_1 + v_LOF) / 2;
-            T = TOGA_ClimbEngineRatio * transitionEngineLapseRate * (numberOfEngines - 1) * Get_T(h, 
+            T = TOGA_ClimbEngineRatio * transitionEngineLapseRate * (numberOfEngines - 1) * Get_T(h,
                 v_m, FlightPhase.Climb, DeltaISA: DeltaISA);
             K_T = T / W - 0.02;
             C_D += C_D_windmilling + C_D_asymmetric;
@@ -1489,33 +1518,33 @@ namespace AircraftModel
             double acceleration = (K_T + K_A * v_m * v_m) * AtmosphereEnviroment.g;
             double DeltaTime = (v_LOF - v_1) / acceleration;
             double DeltaS = v_1 * DeltaTime + 0.5 * acceleration * DeltaTime * DeltaTime;
-            
+
             double v_2 = Units.kt2mps(1.2 * v_stall_TO);
             v_m = (v_LOF + v_2) / 2;
             double r = v_m * v_m / AtmosphereEnviroment.g / (n - 1);
-            T = climbEngineLapseRate * (numberOfEngines - 1) * Get_T(h, v_m, FlightPhase.Climb, 
+            T = climbEngineLapseRate * (numberOfEngines - 1) * Get_T(h, v_m, FlightPhase.Climb,
                 DeltaISA: DeltaISA);
             double C_L = Get_C_L(h, v_LOF, DeltaISA: DeltaISA);
             C_D = C_D0_CR + C_D2_CR * C_L * C_L;
             double D = 0.5 * rho * v_2 * v_2 * S * C_D;
             double gamma = (T - D) / W;
             double S_T = r * gamma;
-            
+
             double h_T = r * gamma * gamma / 2;
             double h_S = Units.ft2m(screenHeight);
             if (h_T > h_S)
                 S_T = Math.Sqrt((r + h_S) * (r + h_S) - r * r);
             else
                 S_T += (h_S - h_T) / gamma;
-            
-            K_T = - 0.3;
+
+            K_T = -0.3;
             C_L = Get_C_L(h, v_1, DeltaISA: DeltaISA);
             C_D = C_D0_CR + C_D2_CR * C_L * C_L;
             K_A = rho * C_D / (2 * W / S);
             v_m = v_1 / 2;
             acceleration = (K_T + K_A * v_m * v_m) * AtmosphereEnviroment.g;
             double S_Stop = (-1) * v_1 * v_1 / (2 * acceleration);
-            
+
             if (balancedFieldLengthType == Balanced_Field_LengthType.AccelerateGo)
                 return totalDistance = (S_G + S_reaction + DeltaS + S_T) * 1.05;
             else
@@ -1534,20 +1563,20 @@ namespace AircraftModel
         /// <summary> [Book p.241-243, 263-264] Get landing distance in m. 
         /// Unit of approachAngle is degr. Landing weight is set to reference weight.
         /// </summary>
-        public double Get_Landing_Distance(double h = 0, 
-            LandingRunwayCondition landingRunwayCondition = LandingRunwayCondition.Dry, 
-            double n = 1.2, double approachAngle = 3, double screenHeight = 50, 
+        public double Get_Landing_Distance(double h = 0,
+            LandingRunwayCondition landingRunwayCondition = LandingRunwayCondition.Dry,
+            double n = 1.2, double approachAngle = 3, double screenHeight = 50,
             double DeltaISA = 0)
         {
-            return Get_Landing_Distance(m_ref, h, landingRunwayCondition, n, approachAngle, 
+            return Get_Landing_Distance(m_ref, h, landingRunwayCondition, n, approachAngle,
                 screenHeight, DeltaISA);
         }
         /// <summary> [Book p.241-243, 263-264] Get landing distance in m. Unit of 
         /// approachAngle is degr.
         /// </summary>
-        public double Get_Landing_Distance(double landingWeight, double h = 0, 
-            LandingRunwayCondition landingRunwayCondition = LandingRunwayCondition.Dry, 
-            double n = 1.2, double approachAngle = 3, double screenHeight = 50, 
+        public double Get_Landing_Distance(double landingWeight, double h = 0,
+            LandingRunwayCondition landingRunwayCondition = LandingRunwayCondition.Dry,
+            double n = 1.2, double approachAngle = 3, double screenHeight = 50,
             double DeltaISA = 0)
         {
             double totalDistance = 0;
@@ -1580,9 +1609,9 @@ namespace AircraftModel
             double rho = AtmosphereEnviroment.Get_rho(h, DeltaISA);
             double C_D = C_D0_LDG + C_D0_DeltaLDG;
             double K_A = rho * (-1) * C_D / (2 * W / S);
-            double S_B = (-1) / (2 * AtmosphereEnviroment.g * K_A) * Math.Log((K_T 
+            double S_B = (-1) / (2 * AtmosphereEnviroment.g * K_A) * Math.Log((K_T
                 + K_A * v_TD * v_TD) / K_T);
-            
+
             return totalDistance = (S_A + S_F + S_FR + S_B) * 1.66;
         }
     }
