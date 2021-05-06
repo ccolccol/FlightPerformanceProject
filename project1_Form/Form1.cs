@@ -2435,51 +2435,51 @@ namespace project1_mod1_outwindow
 
         /*20------------------------------------------------------print ROCD - v during climb
                     List<double> rocd = new List<double>();
-        List<double> tas = new List<double>();
+            List<double> tas = new List<double>();
 
 
 
-        double h = 18000;
+            double h = 18000;
 
 
-        double initialCAS = 0;
-        for(double CAS = 0; CAS <= 600; CAS++)
-        {
-            double ROCD = A306.Get_ROCD(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Climb);
-            if(ROCD > 0)
+            double initialCAS = 0;
+            for (double CAS = 0; CAS <= 600; CAS++)
             {
-                initialCAS = --CAS;
-                break;
+                double ROCD = A306.Get_ROCD(h, Aircraft.SpeedMode.ConstantCAS, Units.kt2mps(CAS), Aircraft.FlightPhase.Climb);
+                if (ROCD > 0)
+                {
+                    initialCAS = --CAS;
+                    break;
+                }
             }
-        }
 
 
-        double endCAS = 0;
-        for (double CAS = 600; CAS >= 0; CAS--)
-        {
-            double ROCD = A306.Get_ROCD(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Climb);
-            if (ROCD > 0)
+            double endCAS = 0;
+            for (double CAS = 600; CAS >= 0; CAS--)
             {
-                endCAS = ++CAS;
-                break;
+                double ROCD = A306.Get_ROCD(h, Aircraft.SpeedMode.ConstantCAS, Units.kt2mps(CAS), Aircraft.FlightPhase.Climb);
+                if (ROCD > 0)
+                {
+                    endCAS = ++CAS;
+                    break;
+                }
             }
-        }
 
-        for (double CAS = initialCAS; CAS <= endCAS; CAS++)
-        {
-            double TAS = AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(CAS));
-            tas.Add(TAS);
+            for (double CAS = initialCAS; CAS <= endCAS; CAS++)
+            {
+                double TAS = AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(CAS));
+                tas.Add(TAS);
 
-            double ROCD = A306.Get_ROCD(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Climb);
-            rocd.Add(ROCD);
-        }
-
+                double ROCD = A306.Get_ROCD(h, Aircraft.SpeedMode.ConstantCAS, Units.kt2mps(CAS), Aircraft.FlightPhase.Climb);
+                rocd.Add(ROCD);
+            }
 
 
-        chart1.ChartAreas[0].AxisX.Minimum = (int)(tas[0] - tas[0] * 0.05);
-        chart1.ChartAreas[0].AxisY.Minimum = 0;
-        chart1.ChartAreas[0].AxisY.LabelStyle.Interval = 100;
-        chart1.Series[0].Points.DataBindXY(tas, rocd);
+
+            chart1.ChartAreas[0].AxisX.Minimum = (int)(tas[0] - tas[0] * 0.05);
+            chart1.ChartAreas[0].AxisY.Minimum = 0;
+            chart1.ChartAreas[0].AxisY.LabelStyle.Interval = 100;
+            chart1.Series[0].Points.DataBindXY(tas, rocd);
         */
 
 
@@ -2526,34 +2526,34 @@ namespace project1_mod1_outwindow
 
         /*22------------------------------------print ROCD - v during descent and mark v_e
                     List<double> tas = new List<double>();
-        List<double> rocd = new List<double>();
-        List<double> slope = new List<double>();
+            List<double> rocd = new List<double>();
+            List<double> slope = new List<double>();
 
-        double h = 18000;
+            double h = 18000;
 
-        for(double CAS = A306.Get_v_stall(h, Aircraft.FlightPhase.Descent) * 0.5; CAS <= 600; CAS++)
-        {
-            double TAS = AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(CAS));
-            tas.Add(TAS);
+            for (double CAS = A306.Get_v_stall(h, Aircraft.FlightPhase.Descent) * 0.5; CAS <= 600; CAS++)
+            {
+                double TAS = AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(CAS));
+                tas.Add(TAS);
 
-            double ROCD = (-1) * A306.Get_ROCD(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Descent);
-            rocd.Add(ROCD);
+                double ROCD = (-1) * A306.Get_ROCD(h, Aircraft.SpeedMode.ConstantCAS, Units.kt2mps(CAS), Aircraft.FlightPhase.Descent);
+                rocd.Add(ROCD);
 
-            double Slope = ROCD / TAS;
-            slope.Add(Slope);
-        }
-
-
-
-        int v_e_index = slope.IndexOf(slope.Min());
-        List<double> v_e_tas = new List<double>() { 0, tas[v_e_index], tas[v_e_index] * 1.5 };
-        List<double> v_e_dg = new List<double>() { 0, rocd[v_e_index], rocd[v_e_index] * 1.5 };
+                double Slope = ROCD / TAS;
+                slope.Add(Slope);
+            }
 
 
-        chart1.ChartAreas[0].AxisX.Minimum = 0;
-        chart1.ChartAreas[0].AxisY.LabelStyle.Interval = 1000;
-        chart1.Series[0].Points.DataBindXY(tas, rocd);
-        chart1.Series[4].Points.DataBindXY(v_e_tas, v_e_dg);
+
+            int v_e_index = slope.IndexOf(slope.Min());
+            List<double> v_e_tas = new List<double>() { 0, tas[v_e_index], tas[v_e_index] * 1.5 };
+            List<double> v_e_dg = new List<double>() { 0, rocd[v_e_index], rocd[v_e_index] * 1.5 };
+
+
+            chart1.ChartAreas[0].AxisX.Minimum = 0;
+            chart1.ChartAreas[0].AxisY.LabelStyle.Interval = 1000;
+            chart1.Series[0].Points.DataBindXY(tas, rocd);
+            chart1.Series[4].Points.DataBindXY(v_e_tas, v_e_dg);
         */
 
 
@@ -2878,7 +2878,7 @@ namespace project1_mod1_outwindow
 
 
 
-            
+
         private void button1_Click(object sender, EventArgs e)
         {
             // *************************************************************//
