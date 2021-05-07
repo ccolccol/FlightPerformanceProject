@@ -163,6 +163,7 @@
             this.ClientSize = new System.Drawing.Size(1272, 673);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.chart1);
+            this.MaximizeBox = false;
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Form1";
