@@ -1366,18 +1366,22 @@ namespace AircraftModel
         /// Take-off weight is set to maximum weight.
         /// </summary>
         public double Get_Takeoff_Distance(int numberOfEngines, double h = 0,
-            double TOGA_ClimbEngineRatio = 1.03, double climbEngineLapseRate = 0.803,
-            TakeoffRunwayCondition takeoffRunwayCondition = TakeoffRunwayCondition.Paved,
-            double n = 1.2, double screenHeight = 35, double DeltaISA = 0)
+            double TOGA_ClimbEngineRatio = 1.1, double takeoffEngineLapseRate = 0.864,
+            double transitionEngineLapseRate = 0.803, 
+            TakeoffRunwayCondition takeoffRunwayCondition = TakeoffRunwayCondition.Paved, 
+            double n = 1.2, double screenHeight = 35,
+            double DeltaISA = 0)
         {
             return Get_Takeoff_Distance(numberOfEngines, m_max, h, TOGA_ClimbEngineRatio,
-                climbEngineLapseRate, takeoffRunwayCondition, n, screenHeight, DeltaISA);
+                takeoffEngineLapseRate, transitionEngineLapseRate, takeoffRunwayCondition, n,
+                screenHeight, DeltaISA);
         }
         /// <summary> [Book p.228-232, 247-248] Get take-off distance in m.
         /// </summary>
         public double Get_Takeoff_Distance(int numberOfEngines, double takeoffWeight, double h = 0,
-            double TOGA_ClimbEngineRatio = 1.03, double climbEngineLapseRate = 0.803,
-            TakeoffRunwayCondition takeoffRunwayCondition = TakeoffRunwayCondition.Paved,
+            double TOGA_ClimbEngineRatio = 1.1, double takeoffEngineLapseRate = 0.864,
+            double transitionEngineLapseRate = 0.803, 
+            TakeoffRunwayCondition takeoffRunwayCondition = TakeoffRunwayCondition.Paved, 
             double n = 1.2, double screenHeight = 35, double DeltaISA = 0)
         {
             double totalDistance = 0;
@@ -1385,38 +1389,39 @@ namespace AircraftModel
             switch (takeoffRunwayCondition)
             {
                 case TakeoffRunwayCondition.Paved:
-                    mu = 0.1;
+                    mu = 0.02;
                     break;
                 case TakeoffRunwayCondition.HardTurfGravel:
-                    mu = 0.2;
+                    mu = 0.04;
                     break;
                 case TakeoffRunwayCondition.ShortDryGrass:
-                    mu = 0.3;
+                    mu = 0.05;
                     break;
                 case TakeoffRunwayCondition.LongGrass:
-                    mu = 0.4;
+                    mu = 0.1;
                     break;
                 default:
-                    mu = 0.6;
+                    mu = 0.2;
                     break;
             }
             double v_LOF = Units.kt2mps(1.1 * v_stall_TO);
-            double T = TOGA_ClimbEngineRatio * numberOfEngines * Get_T(h, v_LOF, FlightPhase.Climb,
-                m: takeoffWeight, DeltaISA: DeltaISA);
+            double T_TOGA = TOGA_ClimbEngineRatio * numberOfEngines * Get_T(h, v_LOF, 
+                FlightPhase.Climb, m: takeoffWeight, DeltaISA: DeltaISA);
+            double T = takeoffEngineLapseRate * T_TOGA;
             double W = takeoffWeight * AtmosphereEnviroment.g;
             double K_T = T / W - mu;
             double rho = AtmosphereEnviroment.Get_rho(h, DeltaISA);
-            double C_L_max = Get_C_L(h, Units.kt2mps(v_stall_TO), DeltaISA: DeltaISA);
-            double C_D = C_D0_CR + C_D2_CR * C_L_max * C_L_max;
-            double K_A = rho * (-1) * (C_D + mu * C_L_max) / (2 * W / S);
-            double S_G = 1 / (2 * AtmosphereEnviroment.g * K_A) * Math.Log((K_T +
+            double C_L = Get_C_L(h, Units.kt2mps(v_stall_TO), DeltaISA: DeltaISA) * 0.54;
+            double C_D = C_D0_CR + C_D2_CR * C_L * C_L;
+            double K_A = rho * (mu * C_L - C_D) / (2 * W / S);
+            double S_G = 1 / (2 * AtmosphereEnviroment.g * K_A / 2.5) * Math.Log((K_T +
                 K_A * v_LOF * v_LOF) / K_T);
 
             double v_2 = Units.kt2mps(1.2 * v_stall_TO);
             double v_trans = (v_LOF + v_2) / 2;
             double r = v_trans * v_trans / AtmosphereEnviroment.g / (n - 1);
             double D = 0.5 * rho * v_2 * v_2 * S * C_D;
-            T *= climbEngineLapseRate;
+            T = transitionEngineLapseRate * T_TOGA;
             double gamma = (T - D) / W;
             double S_T = r * gamma;
 
@@ -1453,13 +1458,14 @@ namespace AircraftModel
         /// </summary>
         public double Get_Balanced_Field_Length(int numberOfEngines, double v_1,
             Balanced_Field_LengthType balancedFieldLengthType, double h = 0,
-            double TOGA_ClimbEngineRatio = 1.03, double transitionEngineLapseRate = 1,
-            double climbEngineLapseRate = 1,
+            double TOGA_ClimbEngineRatio = 1.1, double takeoffEngineLapseRate = 0.864, 
+            double accelerationEngineLapseRate = 0.66, double transitionEngineLapseRate = 0.655, 
             TakeoffRunwayCondition takeoffRunwayCondition = TakeoffRunwayCondition.Paved,
             double n = 1.2, double screenHeight = 35, double DeltaISA = 0)
         {
             return Get_Balanced_Field_Length(numberOfEngines, v_1, balancedFieldLengthType,
-                m_max, h, TOGA_ClimbEngineRatio, transitionEngineLapseRate, climbEngineLapseRate,
+                m_max, h, TOGA_ClimbEngineRatio, takeoffEngineLapseRate, 
+                accelerationEngineLapseRate, transitionEngineLapseRate,
                 takeoffRunwayCondition, n, screenHeight, DeltaISA);
         }
         /// <summary> [Book p.232-233, 248-250] Get balanced field length in m with one engine 
@@ -1467,8 +1473,8 @@ namespace AircraftModel
         /// </summary>
         public double Get_Balanced_Field_Length(int numberOfEngines, double v_1,
             Balanced_Field_LengthType balancedFieldLengthType, double takeoffWeight,
-            double h = 0, double TOGA_ClimbEngineRatio = 1.03, double transitionEngineLapseRate = 1,
-            double climbEngineLapseRate = 1,
+            double h = 0, double TOGA_ClimbEngineRatio = 1.1, double takeoffEngineLapseRate = 0.864, 
+            double accelerationEngineLapseRate = 0.66, double transitionEngineLapseRate = 0.655,
             TakeoffRunwayCondition takeoffRunwayCondition = TakeoffRunwayCondition.Paved,
             double n = 1.2, double screenHeight = 35, double DeltaISA = 0)
         {
@@ -1480,29 +1486,29 @@ namespace AircraftModel
             switch (takeoffRunwayCondition)
             {
                 case TakeoffRunwayCondition.Paved:
-                    mu = 0.09;
+                    mu = 0.02;
                     break;
                 case TakeoffRunwayCondition.HardTurfGravel:
-                    mu = 0.2;
+                    mu = 0.04;
                     break;
                 case TakeoffRunwayCondition.ShortDryGrass:
-                    mu = 0.3;
+                    mu = 0.05;
                     break;
                 case TakeoffRunwayCondition.LongGrass:
-                    mu = 0.4;
+                    mu = 0.1;
                     break;
                 default:
-                    mu = 0.6;
+                    mu = 0.2;
                     break;
             }
-            double T = TOGA_ClimbEngineRatio * numberOfEngines * Get_T(h, v_1, FlightPhase.Climb,
-                DeltaISA: DeltaISA);
+            double T = TOGA_ClimbEngineRatio * takeoffEngineLapseRate * numberOfEngines * 
+                Get_T(h, v_1, FlightPhase.Climb, DeltaISA: DeltaISA);
             double W = takeoffWeight * AtmosphereEnviroment.g;
             double K_T = T / W - mu;
             double rho = AtmosphereEnviroment.Get_rho(h, DeltaISA);
-            double C_L_max = Get_C_L(h, Units.kt2mps(v_stall_TO), DeltaISA: DeltaISA);
-            double C_D = C_D0_CR + C_D2_CR * C_L_max * C_L_max;
-            double K_A = rho * (-1) * (C_D + mu * C_L_max) / (2 * W / S);
+            double C_L = Get_C_L(h, Units.kt2mps(v_stall_TO), DeltaISA: DeltaISA) * 0.54;
+            double C_D = C_D0_CR + C_D2_CR * C_L * C_L;
+            double K_A = rho * (mu * C_L - C_D) / (2 * W / S);
             double S_G = 1 / (2 * AtmosphereEnviroment.g * K_A) * Math.Log((K_T +
                 K_A * v_1 * v_1) / K_T);
 
@@ -1510,11 +1516,11 @@ namespace AircraftModel
 
             double v_LOF = Units.kt2mps(1.1 * v_stall_TO);
             double v_m = (v_1 + v_LOF) / 2;
-            T = TOGA_ClimbEngineRatio * transitionEngineLapseRate * (numberOfEngines - 1) * Get_T(h,
-                v_m, FlightPhase.Climb, DeltaISA: DeltaISA);
-            K_T = T / W - 0.02;
+            T = TOGA_ClimbEngineRatio * accelerationEngineLapseRate * (numberOfEngines - 1) * 
+                Get_T(h, v_m, FlightPhase.Climb, DeltaISA: DeltaISA);
+            K_T = T / W - mu;
             C_D += C_D_windmilling + C_D_asymmetric;
-            K_A = rho * (-1) * (C_D + 0.02 * C_L_max) / (2 * W / S);
+            K_A = rho * (mu * C_L - C_D) / (2 * W / S);
             double acceleration = (K_T + K_A * v_m * v_m) * AtmosphereEnviroment.g;
             double DeltaTime = (v_LOF - v_1) / acceleration;
             double DeltaS = v_1 * DeltaTime + 0.5 * acceleration * DeltaTime * DeltaTime;
@@ -1522,9 +1528,9 @@ namespace AircraftModel
             double v_2 = Units.kt2mps(1.2 * v_stall_TO);
             v_m = (v_LOF + v_2) / 2;
             double r = v_m * v_m / AtmosphereEnviroment.g / (n - 1);
-            T = climbEngineLapseRate * (numberOfEngines - 1) * Get_T(h, v_m, FlightPhase.Climb,
+            T = transitionEngineLapseRate * (numberOfEngines - 1) * Get_T(h, v_m, FlightPhase.Climb,
                 DeltaISA: DeltaISA);
-            double C_L = Get_C_L(h, v_LOF, DeltaISA: DeltaISA);
+            C_L = Get_C_L(h, v_LOF, DeltaISA: DeltaISA);
             C_D = C_D0_CR + C_D2_CR * C_L * C_L;
             double D = 0.5 * rho * v_2 * v_2 * S * C_D;
             double gamma = (T - D) / W;
@@ -1538,9 +1544,8 @@ namespace AircraftModel
                 S_T += (h_S - h_T) / gamma;
 
             K_T = -0.3;
-            C_L = Get_C_L(h, v_1, DeltaISA: DeltaISA);
-            C_D = C_D0_CR + C_D2_CR * C_L * C_L;
-            K_A = rho * C_D / (2 * W / S);
+            C_D = C_D0_LDG + C_D0_DeltaLDG;
+            K_A = rho * (-1) * C_D / (2 * W / S);
             v_m = v_1 / 2;
             acceleration = (K_T + K_A * v_m * v_m) * AtmosphereEnviroment.g;
             double S_Stop = (-1) * v_1 * v_1 / (2 * acceleration);
@@ -1548,7 +1553,22 @@ namespace AircraftModel
             if (balancedFieldLengthType == Balanced_Field_LengthType.AccelerateGo)
                 return totalDistance = (S_G + S_reaction + DeltaS + S_T) * 1.05;
             else
+            {
+                T = TOGA_ClimbEngineRatio * 0.864 * numberOfEngines * Get_T(h, v_1, 
+                    FlightPhase.Climb, DeltaISA: DeltaISA);
+                W = takeoffWeight * AtmosphereEnviroment.g;
+                K_T = T / W - mu;
+                rho = AtmosphereEnviroment.Get_rho(h, DeltaISA);
+                C_L = Get_C_L(h, Units.kt2mps(v_stall_TO), DeltaISA: DeltaISA) * 0.54;
+                C_D = C_D0_CR + C_D2_CR * C_L * C_L;
+                K_A = rho * (mu * C_L - C_D) / (2 * W / S);
+                S_G = 1 / (2 * AtmosphereEnviroment.g * K_A / 2.2) * Math.Log((K_T +
+                    K_A * v_1 * v_1) / K_T);
+
+                S_reaction = 2 * v_1;
+
                 return totalDistance = S_G + S_reaction + S_Stop;
+            }
         }
 
 
@@ -1608,6 +1628,7 @@ namespace AircraftModel
             double W = landingWeight * AtmosphereEnviroment.g;
             double rho = AtmosphereEnviroment.Get_rho(h, DeltaISA);
             double C_D = C_D0_LDG + C_D0_DeltaLDG;
+
             double K_A = rho * (-1) * C_D / (2 * W / S);
             double S_B = (-1) / (2 * AtmosphereEnviroment.g * K_A) * Math.Log((K_T
                 + K_A * v_TD * v_TD) / K_T);

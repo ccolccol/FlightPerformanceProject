@@ -2860,9 +2860,9 @@ namespace project1_mod1_outwindow
             chart1.ChartAreas[0].AxisX.Maximum = (int)(v1[v1.Count - 1] + v1[v1.Count - 1] * 0.05);
             chart1.ChartAreas[0].AxisX.LabelStyle.Interval = 2;
             double axisYMin = Math.Min(bflAccelerateGo[bflAccelerateGo.Count - 1], bflAccelerateStop[0]);
-            chart1.ChartAreas[0].AxisY.Minimum = ((int)(axisYMin - axisYMin * 0.01) / 100) * 100;
+            chart1.ChartAreas[0].AxisY.Minimum = ((int)(axisYMin - axisYMin * 0.03) / 100) * 100;
             double axisYMax = Math.Max(bflAccelerateGo[0], bflAccelerateStop[bflAccelerateStop.Count - 1]);
-            chart1.ChartAreas[0].AxisY.Maximum = ((int)(axisYMax + axisYMax * 0.01) / 100) * 100;
+            chart1.ChartAreas[0].AxisY.Maximum = ((int)(axisYMax + axisYMax * 0.03) / 100) * 100;
             chart1.ChartAreas[0].AxisY.LabelStyle.Interval = 100;
             chart1.Series[0].Points.DataBindXY(v1, bflAccelerateGo);
             chart1.Series[1].Points.DataBindXY(v1, bflAccelerateStop);
