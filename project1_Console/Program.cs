@@ -218,6 +218,27 @@ namespace project1
 
 
 
+        /*LBO---------------------------------------------------------------------------
+                    for (double h = 16000; h <= 39000; h += 1000)
+        {
+            Console.WriteLine($"{A306.Get_Low_Buffet_M(h, factor: 0.98)}");
+        }
+
+
+        for (double h = 16000; h <= 30000; h += 1000)
+        {
+            double TAS_buffet = A306.Get_Low_Buffet_M(h, factor: 0.98) * AtmosphereEnviroment.Get_a(h);
+            double TAS_stall = AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(A306.Get_v_stall(h, Aircraft.FlightPhase.Climb)));
+            double TAS_vmin = AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(A306.Get_v_min(h, Aircraft.FlightPhase.Climb)));
+            TAS_buffet = Math.Round(TAS_buffet, 3);
+            TAS_stall = Math.Round(TAS_stall, 3);
+            TAS_vmin = Math.Round(TAS_vmin, 3);
+            Console.WriteLine($"{TAS_stall}\t\t{TAS_buffet}\t\t{TAS_vmin}");
+        }
+
+        */
+
+
         static void Main()
         {
             string path = System.Environment.CurrentDirectory;
@@ -226,31 +247,11 @@ namespace project1
             Console.WriteLine("File loading succeeded.");
 
 
-            //for (double h = 16000; h <= 39000; h += 1000)
-            //{
-            //    Console.WriteLine($"{A306.Get_Low_Buffet_M(h, factor : 0.98)}");
-            //}
-
-
-            //for (double h = 16000; h <= 30000; h += 1000)
-            //{
-            //    double TAS_buffet = A306.Get_Low_Buffet_M(h, factor: 0.98) * AtmosphereEnviroment.Get_a(h);
-            //    double TAS_stall = AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(A306.Get_v_stall(h, Aircraft.FlightPhase.Climb)));
-            //    double TAS_vmin = AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(A306.Get_v_min(h, Aircraft.FlightPhase.Climb)));
-            //    TAS_buffet = Math.Round(TAS_buffet, 3);
-            //    TAS_stall = Math.Round(TAS_stall, 3);
-            //    TAS_vmin = Math.Round(TAS_vmin, 3);
-            //    Console.WriteLine($"{TAS_stall}\t\t{TAS_buffet}\t\t{TAS_vmin}");
-            //}
 
 
 
 
-
-
-
-
-
+            
         }
     }
 }
