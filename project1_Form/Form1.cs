@@ -20,6 +20,9 @@ namespace project1_mod1_outwindow
         int frontTabX;
         int frontTabY;
 
+        System.Drawing.Font axisFont;
+        System.Drawing.Font labelFont;
+        
         string path;
         string fileName;
         Aircraft A306;
@@ -43,6 +46,9 @@ namespace project1_mod1_outwindow
             path = System.Environment.CurrentDirectory;
             fileName = $@"{path}\A306.txt";
             A306 = new Aircraft(fileName);
+
+            axisFont = new System.Drawing.Font("Times New Roman", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            labelFont = new System.Drawing.Font("Times New Roman", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0))); 
         }
         
         private void moveTabs(int newFrontTabIndex)
@@ -100,6 +106,7 @@ namespace project1_mod1_outwindow
             moveTabs(0);
         }
 
+        // 极曲线
         private void button9_Click(object sender, EventArgs e)
         {
             List<double> c_L = new List<double>();
@@ -118,13 +125,23 @@ namespace project1_mod1_outwindow
             int index = k.IndexOf(k.Max());
             List<double> c_D_k = new List<double>() { 0, c_D[index], c_D[index] * 2 };
             List<double> c_L_k = new List<double>() { 0, c_L[index], c_L[index] * 2 };
+            
 
             chart1.ChartAreas[0].AxisX.Minimum = 0;
+            chart1.ChartAreas[0].AxisX.LabelStyle.Interval = 0.02;
+            chart1.ChartAreas[0].AxisX.LabelStyle.Font = axisFont;
+            chart1.ChartAreas[0].AxisX.Title = "Drag coefficient";
+            chart1.ChartAreas[0].AxisX.TitleFont = labelFont;
+            chart1.ChartAreas[0].AxisY.LabelStyle.Interval = 0.2;
+            chart1.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
+            chart1.ChartAreas[0].AxisY.Title = "Lift coefficient";
+            chart1.ChartAreas[0].AxisY.TitleFont = labelFont;
             chart1.Series[0].Points.DataBindXY(c_D, c_L);
 
-            chart1.Series[1].Points.DataBindXY(c_D_k, c_L_k);
+            chart1.Series[4].Points.DataBindXY(c_D_k, c_L_k);
         }
 
+        // 阻力图
         private void button10_Click(object sender, EventArgs e)
         {
             List<double> tas = new List<double>();
@@ -152,15 +169,26 @@ namespace project1_mod1_outwindow
 
 
             for (int i = 0; i < tas.Count; i++)
-                tas[i] = (int)tas[i];
+                tas[i] = Units.mps2kt(tas[i]);
 
             chart2.ChartAreas[0].AxisX.Minimum = (int)(tas[0] - tas[0] * 0.05);
+            chart2.ChartAreas[0].AxisX.LabelStyle.Interval = 50;
+            chart2.ChartAreas[0].AxisX.LabelStyle.Font = axisFont;
+            chart2.ChartAreas[0].AxisX.Title = "TAS kt";
+            chart2.ChartAreas[0].AxisX.TitleFont = labelFont;
+            chart2.ChartAreas[0].AxisY.LabelStyle.Interval = 2;
+            chart2.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
+            chart2.ChartAreas[0].AxisY.Title = "Drag 10000 N";
+            chart2.ChartAreas[0].AxisY.TitleFont = labelFont;
+
+
             chart2.Series[0].Points.DataBindXY(tas, d);
 
             chart2.Series[1].Points.DataBindXY(tas, d0);
             chart2.Series[2].Points.DataBindXY(tas, di);
         }
         
+        // 所需推力随重量
         private void button11_Click_1(object sender, EventArgs e)
         {
             List<double> tas = new List<double>();
@@ -194,14 +222,23 @@ namespace project1_mod1_outwindow
 
 
             for (int i = 0; i < tas.Count; i++)
-                tas[i] = (int)tas[i];
+                tas[i] = Units.mps2kt(tas[i]);
 
             chart3.ChartAreas[0].AxisX.Minimum = (int)(tas[0] - tas[0] * 0.05);
+            chart3.ChartAreas[0].AxisX.LabelStyle.Interval = 50;
+            chart3.ChartAreas[0].AxisX.LabelStyle.Font = axisFont;
+            chart3.ChartAreas[0].AxisX.Title = "TAS kt";
+            chart3.ChartAreas[0].AxisX.TitleFont = labelFont;
+            chart3.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
+            chart3.ChartAreas[0].AxisY.Title = "Required Thrust 10000 N";
+            chart3.ChartAreas[0].AxisY.TitleFont = labelFont;
+
             chart3.Series[0].Points.DataBindXY(tas, t);
             chart3.Series[1].Points.DataBindXY(tas, t1);
             chart3.Series[2].Points.DataBindXY(tas, t2);
         }
 
+        // 所需推力随高度
         private void button12_Click(object sender, EventArgs e)
         {
             List<double> tas = new List<double>();
@@ -254,14 +291,30 @@ namespace project1_mod1_outwindow
 
 
             for (int i = 0; i < tas.Count; i++)
-                tas[i] = (int)tas[i];
+            {
+                tas[i] = Units.mps2kt(tas[i]);
+                if (i < tas1.Count)
+                    tas1[i] = Units.mps2kt(tas1[i]);
+                if (i < tas2.Count)
+                    tas2[i] = Units.mps2kt(tas2[i]);
+            }
 
-            chart4.ChartAreas[0].AxisX.Minimum = (int)(tas[0] - tas[0] * 0.05);
+
+            chart4.ChartAreas[0].AxisX.Minimum = (int)(tas[0] - tas[0] * 0.1);
+            chart4.ChartAreas[0].AxisX.LabelStyle.Interval = 50;
+            chart4.ChartAreas[0].AxisX.LabelStyle.Font = axisFont;
+            chart4.ChartAreas[0].AxisX.Title = "TAS kt";
+            chart4.ChartAreas[0].AxisX.TitleFont = labelFont;
+            chart4.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
+            chart4.ChartAreas[0].AxisY.Title = "Required Thrust 10000 N";
+            chart4.ChartAreas[0].AxisY.TitleFont = labelFont;
+
             chart4.Series[0].Points.DataBindXY(tas, t);
             chart4.Series[1].Points.DataBindXY(tas1, t1);
             chart4.Series[2].Points.DataBindXY(tas2, t2);
         }
 
+        // 可用推力随高度
         private void button13_Click(object sender, EventArgs e)
         {
             List<double> tas = new List<double>();
@@ -314,14 +367,30 @@ namespace project1_mod1_outwindow
 
 
             for (int i = 0; i < tas.Count; i++)
-                tas[i] = (int)tas[i];
+            {
+                tas[i] = Units.mps2kt(tas[i]);
+                if (i < tas1.Count)
+                    tas1[i] = Units.mps2kt(tas1[i]);
+                if (i < tas2.Count)
+                    tas2[i] = Units.mps2kt(tas2[i]);
+            }
 
             chart5.ChartAreas[0].AxisX.Minimum = (int)(tas[0] - tas[0] * 0.05);
+            chart5.ChartAreas[0].AxisX.LabelStyle.Interval = 50;
+            chart5.ChartAreas[0].AxisX.LabelStyle.Font = axisFont;
+            chart5.ChartAreas[0].AxisX.Title = "TAS kt";
+            chart5.ChartAreas[0].AxisX.TitleFont = labelFont;
+            chart5.ChartAreas[0].AxisY.LabelStyle.Interval = 2;
+            chart5.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
+            chart5.ChartAreas[0].AxisY.Title = "Available Thrust 10000 N";
+            chart5.ChartAreas[0].AxisY.TitleFont = labelFont;
+
             chart5.Series[0].Points.DataBindXY(tas, tmax);
             chart5.Series[1].Points.DataBindXY(tas1, tmax1);
             chart5.Series[2].Points.DataBindXY(tas2, tmax2);
         }
 
+        // 推力图：久航与远航速度
         private void button14_Click(object sender, EventArgs e)
         {
             List<double> tas = new List<double>();
@@ -336,7 +405,8 @@ namespace project1_mod1_outwindow
                 = AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(vmin));
                 TAS < Units.kt2mps(1000); TAS++)
             {
-                tas.Add(TAS);
+                double TAS1 = Units.mps2kt(TAS);
+                tas.Add(TAS1);
                 double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
                 double T = A306.Get_T(h, CAS, Aircraft.FlightPhase.Cruise) / 10000;
                 t.Add(T);
@@ -354,16 +424,23 @@ namespace project1_mod1_outwindow
             List<double> V_MRC_tas = new List<double>() { 0, tas[indexOfV_MRC], tas[indexOfV_MRC] * 1.5 };
             List<double> V_MRC_t = new List<double>() { 0, t[indexOfV_MRC], t[indexOfV_MRC] * 1.5 };
 
-            for (int i = 0; i < tas.Count; i++)
-                tas[i] = (int)tas[i];
 
-            chart6.ChartAreas[0].AxisX.Minimum = (int)(tas[0] - tas[0] * 0.05);
+            chart6.ChartAreas[0].AxisX.Minimum = 0;
+            chart6.ChartAreas[0].AxisX.LabelStyle.Interval = 100;
+            chart6.ChartAreas[0].AxisX.LabelStyle.Font = axisFont;
+            chart6.ChartAreas[0].AxisX.Title = "TAS kt";
+            chart6.ChartAreas[0].AxisX.TitleFont = labelFont;
+            chart6.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
+            chart6.ChartAreas[0].AxisY.Title = "Thrust 10000 N";
+            chart6.ChartAreas[0].AxisY.TitleFont = labelFont;
+
             chart6.Series[0].Points.DataBindXY(tas, t);
 
             chart6.Series[5].Points.DataBindXY(V_e_tas, V_e_t);
             chart6.Series[6].Points.DataBindXY(V_MRC_tas, V_MRC_t);
         }
 
+        // 剩余推力图：陡升速度
         private void button15_Click(object sender, EventArgs e)
         {
             List<double> tas = new List<double>();
@@ -412,19 +489,29 @@ namespace project1_mod1_outwindow
                 for (int i = 0; i < redundant_t.Count; i++)
                     redundant_t[i] *= 10;
 
+            for (int i = 0; i < tas.Count; i++)
+                tas[i] = Units.mps2kt(tas[i]);
+
             int indexOfV_e = redundant_t.IndexOf(redundant_t.Max());
             List<double> V_e_tas = new List<double>() { 0, tas[indexOfV_e] };
             List<double> V_e_redundantT = new List<double>() { redundant_t[indexOfV_e], redundant_t[indexOfV_e] };
 
 
-            for (int i = 0; i < tas.Count; i++)
-                tas[i] = (int)tas[i];
 
             chart7.ChartAreas[0].AxisX.Minimum = (int)(tas[0] - tas[0] * 0.2);
+            chart7.ChartAreas[0].AxisX.LabelStyle.Interval = 50;
+            chart7.ChartAreas[0].AxisX.LabelStyle.Font = axisFont;
+            chart7.ChartAreas[0].AxisX.Title = "TAS kt";
+            chart7.ChartAreas[0].AxisX.TitleFont = labelFont;
+            chart7.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
+            chart7.ChartAreas[0].AxisY.Title = "Redundant Thrust 1000 N";
+            chart7.ChartAreas[0].AxisY.TitleFont = labelFont;
+
             chart7.Series[0].Points.DataBindXY(tas, redundant_t);
             chart7.Series[4].Points.DataBindXY(V_e_tas, V_e_redundantT);
         }
 
+        // 所需功率与可用功率图
         private void button16_Click(object sender, EventArgs e)
         {
             List<double> tas = new List<double>();
@@ -453,13 +540,22 @@ namespace project1_mod1_outwindow
 
 
             for (int i = 0; i < tas.Count; i++)
-                tas[i] = (int)tas[i];
+                tas[i] = Units.mps2kt(tas[i]);
 
             chart8.ChartAreas[0].AxisX.Minimum = (int)(tas[0] - tas[0] * 0.05);
+            chart8.ChartAreas[0].AxisX.LabelStyle.Interval = 50;
+            chart8.ChartAreas[0].AxisX.LabelStyle.Font = axisFont;
+            chart8.ChartAreas[0].AxisX.Title = "TAS kt";
+            chart8.ChartAreas[0].AxisX.TitleFont = labelFont;
+            chart8.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
+            chart8.ChartAreas[0].AxisY.Title = "Power 1000 W";
+            chart8.ChartAreas[0].AxisY.TitleFont = labelFont;
+
             chart8.Series[0].Points.DataBindXY(tas, w);
             chart8.Series[1].Points.DataBindXY(tas, wmax);
         }
 
+        // 所需推力与所需功率中有利速度
         private void button17_Click(object sender, EventArgs e)
         {
             List<double> tas = new List<double>();
@@ -475,7 +571,8 @@ namespace project1_mod1_outwindow
                 = AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(vmin));
                 TAS < Units.kt2mps(700); TAS++)
             {
-                tas.Add(TAS);
+                double TAS1 = Units.mps2kt(TAS);
+                tas.Add(TAS1);
                 double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
                 double T = A306.Get_T(h, CAS, Aircraft.FlightPhase.Cruise) / 10000;
                 double W = T * TAS / 100;
@@ -498,10 +595,17 @@ namespace project1_mod1_outwindow
             List<double> V_e_tas = new List<double>() { tas[indexOfV_eFromThrust], tas[indexOfV_eFromPower], tas[indexOfV_eFromPower] };
             List<double> V_e_ThrustPower = new List<double>() { 0, t[indexOfV_eFromThrust], w[indexOfV_eFromPower] };
 
-            for (int i = 0; i < tas.Count; i++)
-                tas[i] = (int)tas[i];
 
             chart9.ChartAreas[0].AxisX.Minimum = 0;
+            chart9.ChartAreas[0].AxisX.LabelStyle.Interval = 50;
+            chart9.ChartAreas[0].AxisX.LabelStyle.Font = axisFont;
+            chart9.ChartAreas[0].AxisX.Title = "TAS kt";
+            chart9.ChartAreas[0].AxisX.TitleFont = labelFont;
+            chart9.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
+            chart9.ChartAreas[0].AxisY.Title = "Required Thrust 10000 N, Required Power 100 W";
+            chart9.ChartAreas[0].AxisY.TitleFont = labelFont;
+            
+
             chart9.Series[0].Points.DataBindXY(tas, t);
             chart9.Series[2].Points.DataBindXY(tas, w);
             chart9.Series[4].Points.DataBindXY(V_e_FromThrust_tas, V_e_FromThrust_t);
@@ -509,6 +613,7 @@ namespace project1_mod1_outwindow
             chart9.Series[6].Points.DataBindXY(V_e_tas, V_e_ThrustPower);
         }
 
+        // 剩余功率图：快升与陡升速度
         private void button18_Click(object sender, EventArgs e)
         {
             List<double> tas = new List<double>();
@@ -525,7 +630,8 @@ namespace project1_mod1_outwindow
                 = AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(vmin));
                 TAS < Units.kt2mps(1000); TAS++)
             {
-                tas.Add(TAS);
+                double TAS1 = Units.mps2kt(TAS);
+                tas.Add(TAS1);
                 double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
                 double T = A306.Get_T(h, CAS, Aircraft.FlightPhase.Cruise) / 10000;
                 double W = T * TAS;
@@ -574,15 +680,22 @@ namespace project1_mod1_outwindow
 
 
 
-            for (int i = 0; i < tas.Count; i++)
-                tas[i] = (int)tas[i];
 
-            chart10.ChartAreas[0].AxisX.Minimum = (int)(tas[0] - tas[0] * 0.2);
+            chart10.ChartAreas[0].AxisX.Minimum = 0;
+            chart10.ChartAreas[0].AxisX.LabelStyle.Interval = 50;
+            chart10.ChartAreas[0].AxisX.LabelStyle.Font = axisFont;
+            chart10.ChartAreas[0].AxisX.Title = "TAS kt";
+            chart10.ChartAreas[0].AxisX.TitleFont = labelFont;
+            chart10.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
+            chart10.ChartAreas[0].AxisY.Title = "Redundant Power 100 W";
+            chart10.ChartAreas[0].AxisY.TitleFont = labelFont;
+
             chart10.Series[0].Points.DataBindXY(tas, redundant_w);
             chart10.Series[4].Points.DataBindXY(v_e_tas, v_e_redundantW);
             chart10.Series[5].Points.DataBindXY(v_fast_climb_tas, v_fast_climb_redundantW);
         }
 
+        // 推力线左右交点
         private void button19_Click(object sender, EventArgs e)
         {
             List<double> tas = new List<double>();
@@ -627,15 +740,31 @@ namespace project1_mod1_outwindow
 
 
             for (int i = 0; i < tas.Count; i++)
-                tas[i] = (int)tas[i];
+            {
+                tas[i] = Units.mps2kt(tas[i]);
+                if (i < tas1.Count)
+                    tas1[i] = Units.mps2kt(tas1[i]);
+            }
+                
 
             chart11.ChartAreas[0].AxisX.Minimum = (int)(tas[0] - tas[0] * 0.05);
+            chart11.ChartAreas[0].AxisX.LabelStyle.Interval = 50;
+            chart11.ChartAreas[0].AxisX.LabelStyle.Font = axisFont;
+            chart11.ChartAreas[0].AxisX.Title = "TAS kt";
+            chart11.ChartAreas[0].AxisX.TitleFont = labelFont;
+            chart11.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
+            chart11.ChartAreas[0].AxisY.Title = "Required Thrust 10000 N";
+            chart11.ChartAreas[0].AxisY.TitleFont = labelFont;
+
+
+
             chart11.Series[0].Points.DataBindXY(tas, t);
             chart11.Series[1].Points.DataBindXY(tas, tmax);
             chart11.Series[4].Points.DataBindXY(tas1, t1);
             chart11.Series[6].Points.DataBindXY(tas1, tmax1);
         }
 
+        // 抖振边界成因
         private void button20_Click(object sender, EventArgs e)
         {
             List<double> m1 = new List<double>();
@@ -714,9 +843,17 @@ namespace project1_mod1_outwindow
             chart12.ChartAreas[0].AxisX.Minimum = (int)((UBO_Data_M[0] - UBO_Data_M[0] * 0.1) * 10) * 0.1;
             chart12.ChartAreas[0].AxisX.Maximum = (int)((UBO_Data_M[UBO_Data_M.Count - 1] + UBO_Data_M[UBO_Data_M.Count - 1] * 0.1) * 10) * 0.1;
             chart12.ChartAreas[0].AxisX.LabelStyle.Interval = 0.1;
+            chart12.ChartAreas[0].AxisX.LabelStyle.Font = axisFont;
+            chart12.ChartAreas[0].AxisX.Title = "M";
+            chart12.ChartAreas[0].AxisX.TitleFont = labelFont;
+
             double axisYMax = Math.Max(UBO_Data_C_L_max.Max(), c_l1.Max());
             chart12.ChartAreas[0].AxisY.Maximum = (int)((axisYMax + axisYMax * 0.1) * 10 / 2) * 0.2;
             chart12.ChartAreas[0].AxisY.LabelStyle.Interval = 0.2;
+            chart12.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
+            chart12.ChartAreas[0].AxisY.Title = "CL";
+            chart12.ChartAreas[0].AxisY.TitleFont = labelFont;
+
             chart12.Series[0].Points.DataBindXY(UBO_Data_M, UBO_Data_C_L_max);
             chart12.Series[1].Points.DataBindXY(m1, c_l1);
             chart12.Series[2].Points.DataBindXY(m2, c_l2);
@@ -759,7 +896,7 @@ namespace project1_mod1_outwindow
         }
 
 
-
+        // 高度抖振包线
         private void button21_Click(object sender, EventArgs e)
         {
             List<double> alt1 = new List<double>();
@@ -917,13 +1054,29 @@ namespace project1_mod1_outwindow
             lbo_m3.Add(buffetM_h_ceiling);
             ubo_m3.Add(buffetM_h_ceiling);
 
+            for (int i = 0; i < alt1.Count; i++)
+            {
+                alt1[i] /= 100;
+                if (i < alt2.Count)
+                    alt2[i] /= 100;
+                if (i < alt3.Count)
+                    alt3[i] /= 100;
+            }
 
             chart13.ChartAreas[0].AxisX.Minimum = (int)((lbo_m1[0] - lbo_m1[0] * 0.05) * 20) * 0.05;
             chart13.ChartAreas[0].AxisX.Maximum = (int)((ubo_m1[0] + ubo_m1[0] * 0.1) * 10) * 0.1;
             chart13.ChartAreas[0].AxisX.LabelStyle.Interval = 0.05;
+            chart13.ChartAreas[0].AxisX.LabelStyle.Font = axisFont;
+            chart13.ChartAreas[0].AxisX.Title = "M";
+            chart13.ChartAreas[0].AxisX.TitleFont = labelFont;
+
             chart13.ChartAreas[0].AxisY.Minimum = alt1[0];
-            chart13.ChartAreas[0].AxisY.Maximum = (int)((alt1[alt1.Count - 1] + alt1[alt1.Count - 1] * 0.05) / 1000) * 1000;
-            chart13.ChartAreas[0].AxisY.LabelStyle.Interval = 2000;
+            chart13.ChartAreas[0].AxisY.Maximum = (int)((alt1[alt1.Count - 1] + alt1[alt1.Count - 1] * 0.05) / 10) * 10;
+            chart13.ChartAreas[0].AxisY.LabelStyle.Interval = 20;
+            chart13.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
+            chart13.ChartAreas[0].AxisY.Title = "Altitude 100 ft";
+            chart13.ChartAreas[0].AxisY.TitleFont = labelFont;
+
             chart13.Series[0].Points.DataBindXY(lbo_m1, alt1);
             chart13.Series[1].Points.DataBindXY(ubo_m1, alt1);
             chart13.Series[2].Points.DataBindXY(lbo_m2, alt2);
@@ -932,6 +1085,7 @@ namespace project1_mod1_outwindow
             chart13.Series[8].Points.DataBindXY(ubo_m3, alt3);
         }
 
+        // 重量抖振包线（剪切）
         private void button23_Click(object sender, EventArgs e)
         {
             foreach (var series in chart14.Series)
@@ -1112,9 +1266,17 @@ namespace project1_mod1_outwindow
             chart14.ChartAreas[0].AxisX.Minimum = (int)((lbo_m1[0] - lbo_m1[0] * 0.05) * 20) * 0.05;
             chart14.ChartAreas[0].AxisX.Maximum = (int)((ubo_m1[0] + ubo_m1[0] * 0.1) * 10) * 0.1;
             chart14.ChartAreas[0].AxisX.LabelStyle.Interval = 0.05;
+            chart14.ChartAreas[0].AxisX.LabelStyle.Font = axisFont;
+            chart14.ChartAreas[0].AxisX.Title = "M";
+            chart14.ChartAreas[0].AxisX.TitleFont = labelFont;
+
             chart14.ChartAreas[0].AxisY.Minimum = w1[0];
             chart14.ChartAreas[0].AxisY.Maximum = (int)((w1[w1.Count - 1] + w1[w1.Count - 1] * 0.1) / 10) * 10;
             chart14.ChartAreas[0].AxisY.LabelStyle.Interval = 20;
+            chart14.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
+            chart14.ChartAreas[0].AxisY.Title = "Mass ton";
+            chart14.ChartAreas[0].AxisY.TitleFont = labelFont;
+
             chart14.Series[0].Points.DataBindXY(lbo_m1, w1);
             chart14.Series[1].Points.DataBindXY(ubo_m1, w1);
             chart14.Series[2].Points.DataBindXY(lbo_m2, w2);
@@ -1124,6 +1286,7 @@ namespace project1_mod1_outwindow
             chart14.Series[9].Points.DataBindXY(M_MO_m, M_MO_w);
         }
 
+        // 重量抖振包线（未剪切）
         private void button22_Click(object sender, EventArgs e)
         {
             foreach (var series in chart14.Series)
@@ -1304,9 +1467,17 @@ namespace project1_mod1_outwindow
             chart14.ChartAreas[0].AxisX.Minimum = (int)((lbo_m1[0] - lbo_m1[0] * 0.05) * 20) * 0.05;
             chart14.ChartAreas[0].AxisX.Maximum = (int)((ubo_m1[0] + ubo_m1[0] * 0.1) * 10) * 0.1;
             chart14.ChartAreas[0].AxisX.LabelStyle.Interval = 0.05;
+            chart14.ChartAreas[0].AxisX.LabelStyle.Font = axisFont;
+            chart14.ChartAreas[0].AxisX.Title = "M";
+            chart14.ChartAreas[0].AxisX.TitleFont = labelFont;
+
             chart14.ChartAreas[0].AxisY.Minimum = w1[0];
             chart14.ChartAreas[0].AxisY.Maximum = (int)((w1[w1.Count - 1] + w1[w1.Count - 1] * 0.1) / 10) * 10;
             chart14.ChartAreas[0].AxisY.LabelStyle.Interval = 20;
+            chart14.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
+            chart14.ChartAreas[0].AxisY.Title = "Mass ton";
+            chart14.ChartAreas[0].AxisY.TitleFont = labelFont;
+
             chart14.Series[0].Points.DataBindXY(lbo_m1, w1);
             chart14.Series[2].Points.DataBindXY(lbo_m2, w2);
             chart14.Series[7].Points.DataBindXY(lbo_m3, w3);
@@ -1452,6 +1623,7 @@ namespace project1_mod1_outwindow
                 Units.kt2mps(CAS), Aircraft.FlightPhase.Cruise);
         }
         
+        // 飞行包线（未剪切）
         private void button24_Click(object sender, EventArgs e)
         {
             foreach (var series in chart15.Series)
@@ -1677,7 +1849,35 @@ namespace project1_mod1_outwindow
                 v_ubo.Add(v_UBO);
             }
 
+            for (int i = 0; i < v_min_t.Count; i++)
+                v_min_t[i] = Units.mps2kt(v_min_t[i]);
+            for (int i = 0; i < vStall.Count; i++)
+                vStall[i] = Units.mps2kt(vStall[i]);
+            for (int i = 0; i < v_buffet.Count; i++)
+                v_buffet[i] = Units.mps2kt(v_buffet[i]);
+            for (int i = 0; i < v_max_t.Count; i++)
+                v_max_t[i] = Units.mps2kt(v_max_t[i]);
+            for (int i = 0; i < v_v_MO.Count; i++)
+                v_v_MO[i] = Units.mps2kt(v_v_MO[i]);
+            for (int i = 0; i < v_M_MO.Count; i++)
+                v_M_MO[i] = Units.mps2kt(v_M_MO[i]);
+            for (int i = 0; i < v_ubo.Count; i++)
+                v_ubo[i] = Units.mps2kt(v_ubo[i]);
 
+            for (int i = 0; i < altitude_v_min_t.Count; i++)
+                altitude_v_min_t[i] /= 100;
+            for (int i = 0; i < altitude_stall.Count; i++)
+                altitude_stall[i] /= 100;
+            for (int i = 0; i < altitude_v_lbo.Count; i++)
+                altitude_v_lbo[i] /= 100;
+            for (int i = 0; i < altitude.Count; i++)
+                altitude[i] /= 100;
+            for (int i = 0; i < altitude_v_MO.Count; i++)
+                altitude_v_MO[i] /= 100;
+            for (int i = 0; i < altitude_M_MO.Count; i++)
+                altitude_M_MO[i] /= 100;
+            for (int i = 0; i < altitude_v_ubo.Count; i++)
+                altitude_v_ubo[i] /= 100;
 
             chart15.ChartAreas[0].AxisX.Minimum = (int)(vStall[0] - vStall[0] * 0.05);
 
@@ -1687,8 +1887,13 @@ namespace project1_mod1_outwindow
             v_XAxis_max.Add(v_M_MO.Max());
 
             chart15.ChartAreas[0].AxisX.Maximum = (int)(v_XAxis_max.Max() + v_XAxis_max.Max() * 0.01);
+            chart15.ChartAreas[0].AxisX.LabelStyle.Interval = 50;
+            chart15.ChartAreas[0].AxisX.LabelStyle.Font = axisFont;
+            chart15.ChartAreas[0].AxisX.Title = "TAS kt";
+            chart15.ChartAreas[0].AxisX.TitleFont = labelFont;
 
-            chart15.ChartAreas[0].AxisY.Minimum = 15000;
+
+            chart15.ChartAreas[0].AxisY.Minimum = 150;
             double axisYMax = altitude_v_ubo[altitude_v_ubo.Count - 1] >
                 altitude_M_MO[altitude_M_MO.Count - 1] &&
                 altitude_v_ubo[altitude_v_ubo.Count - 1] >
@@ -1698,8 +1903,12 @@ namespace project1_mod1_outwindow
                 altitude_v_lbo[altitude_v_lbo.Count - 1] ?
                 altitude_M_MO[altitude_M_MO.Count - 1] :
                 altitude_v_lbo[altitude_v_lbo.Count - 1]);
-            chart15.ChartAreas[0].AxisY.Maximum = (int)((axisYMax + axisYMax * 0.03) / 1000) * 1000; ;
-            chart15.ChartAreas[0].AxisY.LabelStyle.Interval = 2000;
+            chart15.ChartAreas[0].AxisY.Maximum = (int)((axisYMax + axisYMax * 0.03) / 10) * 10;
+            chart15.ChartAreas[0].AxisY.LabelStyle.Interval = 20;
+            chart15.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
+            chart15.ChartAreas[0].AxisY.Title = "Altitude 100 ft";
+            chart15.ChartAreas[0].AxisY.TitleFont = labelFont;
+
             chart15.Series[0].Points.DataBindXY(v_min_t, altitude_v_min_t);
             chart15.Series[1].Points.DataBindXY(vStall, altitude_stall);
             chart15.Series[2].Points.DataBindXY(v_buffet, altitude_v_lbo);
@@ -1709,6 +1918,7 @@ namespace project1_mod1_outwindow
             chart15.Series[9].Points.DataBindXY(v_ubo, altitude_v_ubo);
         }
 
+        // 飞行包线（剪切）
         private void button25_Click(object sender, EventArgs e)
         {
             foreach (var series in chart15.Series)
@@ -2031,6 +2241,35 @@ namespace project1_mod1_outwindow
             altitude.Insert(0, altitude_M_MO[altitude_M_MO.Count - 1]);
             v_max_t.Insert(0, v_M_MO[v_M_MO.Count - 1]);
 
+            for (int i = 0; i < v_min_t.Count; i++)
+                v_min_t[i] = Units.mps2kt(v_min_t[i]);
+            for (int i = 0; i < vStall.Count; i++)
+                vStall[i] = Units.mps2kt(vStall[i]);
+            for (int i = 0; i < v_buffet.Count; i++)
+                v_buffet[i] = Units.mps2kt(v_buffet[i]);
+            for (int i = 0; i < v_max_t.Count; i++)
+                v_max_t[i] = Units.mps2kt(v_max_t[i]);
+            for (int i = 0; i < v_v_MO.Count; i++)
+                v_v_MO[i] = Units.mps2kt(v_v_MO[i]);
+            for (int i = 0; i < v_M_MO.Count; i++)
+                v_M_MO[i] = Units.mps2kt(v_M_MO[i]);
+            for (int i = 0; i < v_ubo.Count; i++)
+                v_ubo[i] = Units.mps2kt(v_ubo[i]);
+
+            for (int i = 0; i < altitude_v_min_t.Count; i++)
+                altitude_v_min_t[i] /= 100;
+            for (int i = 0; i < altitude_stall.Count; i++)
+                altitude_stall[i] /= 100;
+            for (int i = 0; i < altitude_v_min.Count; i++)
+                altitude_v_min[i] /= 100;
+            for (int i = 0; i < altitude.Count; i++)
+                altitude[i] /= 100;
+            for (int i = 0; i < altitude_v_MO.Count; i++)
+                altitude_v_MO[i] /= 100;
+            for (int i = 0; i < altitude_M_MO.Count; i++)
+                altitude_M_MO[i] /= 100;
+            for (int i = 0; i < altitude_v_ubo.Count; i++)
+                altitude_v_ubo[i] /= 100;
 
             List<double> v_XAxis_max = new List<double>();
             v_XAxis_max.Add(v_max_t.Max());
@@ -2040,9 +2279,17 @@ namespace project1_mod1_outwindow
 
             chart15.ChartAreas[0].AxisX.Minimum = (int)(vStall[0] - vStall[0] * 0.005);
             chart15.ChartAreas[0].AxisX.Maximum = (int)(v_XAxis_max.Max() + v_XAxis_max.Max() * 0.1);
-            chart15.ChartAreas[0].AxisY.Minimum = 15000;
-            chart15.ChartAreas[0].AxisY.Maximum = 41000;
-            chart15.ChartAreas[0].AxisY.LabelStyle.Interval = 2000;
+            chart15.ChartAreas[0].AxisX.LabelStyle.Interval = 50;
+            chart15.ChartAreas[0].AxisX.LabelStyle.Font = axisFont;
+            chart15.ChartAreas[0].AxisX.Title = "TAS kt";
+            chart15.ChartAreas[0].AxisX.TitleFont = labelFont;
+
+            chart15.ChartAreas[0].AxisY.Minimum = 150;
+            chart15.ChartAreas[0].AxisY.Maximum = 410;
+            chart15.ChartAreas[0].AxisY.LabelStyle.Interval = 20;
+            chart15.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
+            chart15.ChartAreas[0].AxisY.Title = "Altitude 100 ft";
+            chart15.ChartAreas[0].AxisY.TitleFont = labelFont;
             chart15.Series[0].Points.DataBindXY(v_min_t, altitude_v_min_t);
 
             if (vBuffetWrapVStallFlag == false)
@@ -2064,6 +2311,7 @@ namespace project1_mod1_outwindow
                 Aircraft.Balanced_Field_LengthType.AccelerateStop);
         }
 
+        // 平衡场长图
         private void button26_Click(object sender, EventArgs e)
         {
             List<double> v1 = new List<double>();
@@ -2112,20 +2360,36 @@ namespace project1_mod1_outwindow
             List<double> bflVerticalLine_v1 = new List<double>() { BFL_V1, BFL_V1 };
 
 
+            for (int i = 0; i < v1.Count; i++)
+                v1[i] = Units.mps2kt(v1[i]);
+            for (int i = 0; i < bflHorizontalLine_v1.Count; i++)
+                bflHorizontalLine_v1[i] = Units.mps2kt(bflHorizontalLine_v1[i]);
+            for (int i = 0; i < bflVerticalLine_v1.Count; i++)
+                bflVerticalLine_v1[i] = Units.mps2kt(bflVerticalLine_v1[i]);
+
             chart16.ChartAreas[0].AxisX.Minimum = (int)(v1[0] - v1[0] * 0.01);
             chart16.ChartAreas[0].AxisX.Maximum = (int)(v1[v1.Count - 1] + v1[v1.Count - 1] * 0.05);
             chart16.ChartAreas[0].AxisX.LabelStyle.Interval = 2;
+            chart16.ChartAreas[0].AxisX.LabelStyle.Font = axisFont;
+            chart16.ChartAreas[0].AxisX.Title = "V1 kt";
+            chart16.ChartAreas[0].AxisX.TitleFont = labelFont;
+
             double axisYMin = Math.Min(bflAccelerateGo[bflAccelerateGo.Count - 1], bflAccelerateStop[0]);
             chart16.ChartAreas[0].AxisY.Minimum = ((int)(axisYMin - axisYMin * 0.03) / 100) * 100;
             double axisYMax = Math.Max(bflAccelerateGo[0], bflAccelerateStop[bflAccelerateStop.Count - 1]);
             chart16.ChartAreas[0].AxisY.Maximum = ((int)(axisYMax + axisYMax * 0.03) / 100) * 100;
             chart16.ChartAreas[0].AxisY.LabelStyle.Interval = 100;
+            chart16.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
+            chart16.ChartAreas[0].AxisY.Title = "Take-off distance m";
+            chart16.ChartAreas[0].AxisY.TitleFont = labelFont;
+
             chart16.Series[0].Points.DataBindXY(v1, bflAccelerateGo);
             chart16.Series[1].Points.DataBindXY(v1, bflAccelerateStop);
             chart16.Series[4].Points.DataBindXY(bflHorizontalLine_v1, bflHorizontalLine_length);
             chart16.Series[5].Points.DataBindXY(bflVerticalLine_v1, bflVerticalLine_length);
         }
 
+        // 爬升梯度随速度
         private void button27_Click(object sender, EventArgs e)
         {
             List<double> cg = new List<double>();
@@ -2170,7 +2434,7 @@ namespace project1_mod1_outwindow
             for (double CAS = initialCAS; CAS <= endCAS; CAS++)
             {
                 double TAS = AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(CAS));
-                tas.Add(TAS);
+                tas.Add(Units.mps2kt(TAS));
 
                 double T = A306.Get_T(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Climb);
                 double D = A306.Get_D(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Climb);
@@ -2182,11 +2446,21 @@ namespace project1_mod1_outwindow
 
 
             chart17.ChartAreas[0].AxisX.Minimum = (int)(tas[0] - tas[0] * 0.05);
+            chart17.ChartAreas[0].AxisX.LabelStyle.Interval = 50;
+            chart17.ChartAreas[0].AxisX.LabelStyle.Font = axisFont;
+            chart17.ChartAreas[0].AxisX.Title = "TAS kt";
+            chart17.ChartAreas[0].AxisX.TitleFont = labelFont;
+
             chart17.ChartAreas[0].AxisY.Minimum = 0;
             chart17.ChartAreas[0].AxisY.LabelStyle.Interval = 0.01;
+            chart17.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
+            chart17.ChartAreas[0].AxisY.Title = "Climb Gradient %";
+            chart17.ChartAreas[0].AxisY.TitleFont = labelFont;
+
             chart17.Series[0].Points.DataBindXY(tas, cg);
         }
 
+        // 爬升率随速度
         private void button28_Click(object sender, EventArgs e)
         {
             List<double> rocd = new List<double>();
@@ -2223,7 +2497,7 @@ namespace project1_mod1_outwindow
             for (double CAS = initialCAS; CAS <= endCAS; CAS++)
             {
                 double TAS = AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(CAS));
-                tas.Add(TAS);
+                tas.Add(Units.mps2kt(TAS));
 
                 double ROCD = A306.Get_ROCD(h, Aircraft.SpeedMode.ConstantCAS, Units.kt2mps(CAS), Aircraft.FlightPhase.Climb);
                 rocd.Add(ROCD);
@@ -2232,14 +2506,27 @@ namespace project1_mod1_outwindow
 
 
             chart18.ChartAreas[0].AxisX.Minimum = (int)(tas[0] - tas[0] * 0.05);
+            chart18.ChartAreas[0].AxisX.LabelStyle.Interval = 50;
+            chart18.ChartAreas[0].AxisX.LabelStyle.Font = axisFont;
+            chart18.ChartAreas[0].AxisX.Title = "TAS kt";
+            chart18.ChartAreas[0].AxisX.TitleFont = labelFont;
+
             chart18.ChartAreas[0].AxisY.Minimum = 0;
             chart18.ChartAreas[0].AxisY.LabelStyle.Interval = 300;
+            chart18.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
+            chart18.ChartAreas[0].AxisY.Title = "Rate of Climb ft/min";
+            chart18.ChartAreas[0].AxisY.TitleFont = labelFont;
+
             chart18.Series[0].Points.DataBindXY(tas, rocd);
         }
 
+        // 爬升数值表
         private void button29_Click(object sender, EventArgs e)
         {
             textBox1.Text = "\t\t\t    CLIMB" + System.Environment.NewLine;
+            textBox1.Text += "\tCAS/M: 250/300/.79\t\tTemperature: ISA" + System.Environment.NewLine;
+            textBox1.Text += "\tlo: 104.4t\tnom: 140t\thi: 171.7t" + System.Environment.NewLine;
+            textBox1.Text += "\t================================================" + System.Environment.NewLine;
             textBox1.Text += "\tFL\t TAS\t\tROCD\t\t fuel" + System.Environment.NewLine;
             textBox1.Text += "\t\t[kts]\t\t[fpm]\t\t[kg/min]" + System.Environment.NewLine;
             textBox1.Text += "\t\t\t lo\t nom\t hi\t nom" + System.Environment.NewLine;
@@ -2329,9 +2616,10 @@ namespace project1_mod1_outwindow
             }
         }
 
+        // 燃油里程随马赫数与巡航方式
         private void button30_Click(object sender, EventArgs e)
         {
-            List<double> tas = new List<double>();
+            List<double> m = new List<double>();
             List<double> sr = new List<double>();
             List<double> sr1 = new List<double>();
             List<double> sr2 = new List<double>();
@@ -2342,21 +2630,24 @@ namespace project1_mod1_outwindow
             for (double CAS = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise); CAS <= 500; CAS++)
             {
                 double TAS = AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(CAS));
-                tas.Add(TAS);
+                double a = AtmosphereEnviroment.Get_a(h);
+                double M = TAS / a;
 
-                double ff = A306.Get_ff(Aircraft.FlightPhase.Cruise, h: h, CAS: Units.kt2mps(CAS));
+                m.Add(M);
+
+                double ff = A306.Get_ff(Aircraft.FlightPhase.Cruise, m: A306.m_ref - (A306.m_ref - A306.m_min) * 0.5, h: h, CAS: Units.kt2mps(CAS));
                 ff /= 60;
 
                 double SR = TAS / ff;
                 sr.Add(SR);
 
-                ff = A306.Get_ff(Aircraft.FlightPhase.Cruise, m: A306.m_ref - (A306.m_ref - A306.m_min) * 0.3, h: h, CAS: Units.kt2mps(CAS));
+                ff = A306.Get_ff(Aircraft.FlightPhase.Cruise, m: A306.m_ref - (A306.m_ref - A306.m_min) * 0.7, h: h, CAS: Units.kt2mps(CAS));
                 ff /= 60;
 
                 SR = TAS / ff;
                 sr1.Add(SR);
 
-                ff = A306.Get_ff(Aircraft.FlightPhase.Cruise, m: A306.m_ref - (A306.m_ref - A306.m_min) * 0.6, h: h, CAS: Units.kt2mps(CAS));
+                ff = A306.Get_ff(Aircraft.FlightPhase.Cruise, m: A306.m_ref - (A306.m_ref - A306.m_min) * 0.9, h: h, CAS: Units.kt2mps(CAS));
                 ff /= 60;
 
                 SR = TAS / ff;
@@ -2369,7 +2660,7 @@ namespace project1_mod1_outwindow
             int index_sr1_max = sr1.IndexOf(sr1.Max());
             int index_sr2_max = sr2.IndexOf(sr2.Max());
 
-            List<double> v_sr_max = new List<double>() { tas[index_sr_max], tas[index_sr1_max], tas[index_sr2_max] };
+            List<double> v_sr_max = new List<double>() { m[index_sr_max], m[index_sr1_max], m[index_sr2_max] };
             List<double> sr_max = new List<double>() { sr[index_sr_max], sr1[index_sr1_max], sr2[index_sr2_max] };
 
 
@@ -2402,25 +2693,35 @@ namespace project1_mod1_outwindow
 
 
 
-            List<double> v_sr_99max = new List<double>() { tas[index_sr_99max], tas[index_sr1_99max], tas[index_sr2_99max] };
+            List<double> v_sr_99max = new List<double>() { m[index_sr_99max], m[index_sr1_99max], m[index_sr2_99max] };
             List<double> sr_99max = new List<double>() { sr[index_sr_99max], sr1[index_sr1_99max], sr2[index_sr2_99max] };
 
 
 
 
-            List<double> v_constM = new List<double>() { tas[index_sr_99max], tas[index_sr_99max], tas[index_sr_99max] };
-            List<double> sr_constM = new List<double>() { sr[index_sr_99max], sr1[index_sr_99max], sr2[index_sr_99max] };
+            List<double> v_constM = new List<double>() { m[index_sr_99max], m[index_sr_99max], m[index_sr_99max], m[index_sr_99max] };
+            List<double> sr_constM = new List<double>() { sr[index_sr_99max], sr1[index_sr_99max], sr2[index_sr_99max], sr2[index_sr_99max] * 1.05 };
 
-            chart19.ChartAreas[0].AxisX.Minimum = (int)(tas[0] - tas[0] * 0.05);
+            chart19.ChartAreas[0].AxisX.Minimum = (int)((m[0] - m[0] * 0.01) * 10) / 10.0;
+            chart19.ChartAreas[0].AxisX.LabelStyle.Interval = 0.1;
+            chart19.ChartAreas[0].AxisX.LabelStyle.Font = axisFont;
+            chart19.ChartAreas[0].AxisX.Title = "M";
+            chart19.ChartAreas[0].AxisX.TitleFont = labelFont;
+
             chart19.ChartAreas[0].AxisY.LabelStyle.Interval = 20;
-            chart19.Series[0].Points.DataBindXY(tas, sr);
-            chart19.Series[1].Points.DataBindXY(tas, sr1);
-            chart19.Series[2].Points.DataBindXY(tas, sr2);
+            chart19.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
+            chart19.ChartAreas[0].AxisY.Title = "SR m/kg";
+            chart19.ChartAreas[0].AxisY.TitleFont = labelFont;
+
+            chart19.Series[0].Points.DataBindXY(m, sr);
+            chart19.Series[1].Points.DataBindXY(m, sr1);
+            chart19.Series[2].Points.DataBindXY(m, sr2);
             chart19.Series[4].Points.DataBindXY(v_sr_max, sr_max);
             chart19.Series[5].Points.DataBindXY(v_sr_99max, sr_99max);
             chart19.Series[7].Points.DataBindXY(v_constM, sr_constM);
         }
 
+        // 燃油里程与高度：最佳巡航高度
         private void button31_Click(object sender, EventArgs e)
         {
             List<double> h = new List<double>();
@@ -2431,7 +2732,7 @@ namespace project1_mod1_outwindow
 
             for (double alt = 30000; alt <= 43000; alt += 1000)
             {
-                h.Add(alt);
+                h.Add(alt / 100);
 
                 double TAS = A306.M_MO * AtmosphereEnviroment.Get_a(alt);
                 double CAS = AtmosphereEnviroment.Get_CAS(alt, TAS);
@@ -2460,18 +2761,31 @@ namespace project1_mod1_outwindow
 
             chart20.ChartAreas[0].AxisX.Minimum = (int)(sr[0] - sr[0] * 0.02);
             chart20.ChartAreas[0].AxisX.Maximum = (int)(sr2[sr.Count - 1] + sr2[sr.Count - 1] * 0.05);
-            chart20.ChartAreas[0].AxisY.Minimum = 29000;
-            chart20.ChartAreas[0].AxisY.Maximum = 44000;
-            chart20.ChartAreas[0].AxisY.LabelStyle.Interval = 1000;
+            chart20.ChartAreas[0].AxisX.LabelStyle.Interval = 5;
+            chart20.ChartAreas[0].AxisX.LabelStyle.Font = axisFont;
+            chart20.ChartAreas[0].AxisX.Title = "SR m/kg";
+            chart20.ChartAreas[0].AxisX.TitleFont = labelFont;
+
+            chart20.ChartAreas[0].AxisY.Minimum = 290;
+            chart20.ChartAreas[0].AxisY.Maximum = 440;
+            chart20.ChartAreas[0].AxisY.LabelStyle.Interval = 10;
+            chart20.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
+            chart20.ChartAreas[0].AxisY.Title = "Altitude 100 ft";
+            chart20.ChartAreas[0].AxisY.TitleFont = labelFont;
+
             chart20.Series[0].Points.DataBindXY(sr, h);
             chart20.Series[1].Points.DataBindXY(sr1, h);
             chart20.Series[2].Points.DataBindXY(sr2, h);
             chart20.Series[4].Points.DataBindXY(sr_sr_max, h_sr_max);
         }
 
+        // 巡航数值表
         private void button32_Click(object sender, EventArgs e)
         {
             textBox2.Text = "\t\t\tCRUISE" + System.Environment.NewLine;
+            textBox2.Text += "\tCAS/M: 250/310/.79    Temperature: ISA" + System.Environment.NewLine;
+            textBox2.Text += "\tlo: 104.4t     nom: 140t    hi: 171.7t" + System.Environment.NewLine;
+            textBox2.Text += "\t======================================" + System.Environment.NewLine;
             textBox2.Text += "\tFL\t TAS\t\tfuel" + System.Environment.NewLine;
             textBox2.Text += "\t\t[kts]\t      [kg/min]" + System.Environment.NewLine;
             textBox2.Text += "\t\t\tlo\tnom\thi" + System.Environment.NewLine;
@@ -2535,6 +2849,7 @@ namespace project1_mod1_outwindow
             }
         }
 
+        // 下降梯度图及飘降速度
         private void button33_Click(object sender, EventArgs e)
         {
             List<double> tas = new List<double>();
@@ -2546,7 +2861,7 @@ namespace project1_mod1_outwindow
             for (double CAS = A306.Get_v_stall(h, Aircraft.FlightPhase.Descent); CAS <= 600; CAS++)
             {
                 double TAS = AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(CAS));
-                tas.Add(TAS);
+                tas.Add(Units.mps2kt(TAS));
 
 
                 double D = A306.Get_D(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Descent);
@@ -2559,16 +2874,26 @@ namespace project1_mod1_outwindow
 
 
             int v_e_index = dg.IndexOf(dg.Min());
-            List<double> v_e_tas = new List<double>() { tas[v_e_index], tas[v_e_index] };
-            List<double> v_e_dg = new List<double>() { 0, dg[v_e_index] };
+            List<double> v_e_tas = new List<double>() { 0, tas[v_e_index], tas[v_e_index] * 1.4 };
+            List<double> v_e_dg = new List<double>() { dg[v_e_index], dg[v_e_index], dg[v_e_index] };
 
 
             chart21.ChartAreas[0].AxisX.Minimum = (int)(tas[0] - tas[0] * 0.05);
+            chart21.ChartAreas[0].AxisX.LabelStyle.Interval = 50;
+            chart21.ChartAreas[0].AxisX.LabelStyle.Font = axisFont;
+            chart21.ChartAreas[0].AxisX.Title = "TAS kt";
+            chart21.ChartAreas[0].AxisX.TitleFont = labelFont;
+
             chart21.ChartAreas[0].AxisY.LabelStyle.Interval = 0.02;
+            chart21.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
+            chart21.ChartAreas[0].AxisY.Title = "Descent Gradient %";
+            chart21.ChartAreas[0].AxisY.TitleFont = labelFont;
+
             chart21.Series[0].Points.DataBindXY(tas, dg);
             chart21.Series[4].Points.DataBindXY(v_e_tas, v_e_dg);
         }
 
+        // 下降率图及飘降速度
         private void button34_Click(object sender, EventArgs e)
         {
             List<double> tas = new List<double>();
@@ -2580,7 +2905,7 @@ namespace project1_mod1_outwindow
             for (double CAS = A306.Get_v_stall(h, Aircraft.FlightPhase.Descent) * 0.5; CAS <= 600; CAS++)
             {
                 double TAS = AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(CAS));
-                tas.Add(TAS);
+                tas.Add(Units.mps2kt(TAS));
 
                 double ROCD = (-1) * A306.Get_ROCD(h, Aircraft.SpeedMode.ConstantCAS, Units.kt2mps(CAS), Aircraft.FlightPhase.Descent);
                 rocd.Add(ROCD);
@@ -2597,14 +2922,27 @@ namespace project1_mod1_outwindow
 
 
             chart22.ChartAreas[0].AxisX.Minimum = 0;
+            chart22.ChartAreas[0].AxisX.LabelStyle.Interval = 50;
+            chart22.ChartAreas[0].AxisX.LabelStyle.Font = axisFont;
+            chart22.ChartAreas[0].AxisX.Title = "TAS kt";
+            chart22.ChartAreas[0].AxisX.TitleFont = labelFont;
+
             chart22.ChartAreas[0].AxisY.LabelStyle.Interval = 1000;
+            chart22.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
+            chart22.ChartAreas[0].AxisY.Title = "Rate of descent ft/min";
+            chart22.ChartAreas[0].AxisY.TitleFont = labelFont;
+
             chart22.Series[0].Points.DataBindXY(tas, rocd);
             chart22.Series[4].Points.DataBindXY(v_e_tas, v_e_dg);
         }
 
+        // 下降数值表
         private void button35_Click(object sender, EventArgs e)
         {
             textBox3.Text = "\t\t\tDESCENT" + System.Environment.NewLine;
+            textBox3.Text += "\tCAS/M: 250/280/.79" + System.Environment.NewLine;
+            textBox3.Text += "\tnom: 140t     Temperature: ISA" + System.Environment.NewLine;
+            textBox3.Text += "\t==============================" + System.Environment.NewLine;
             textBox3.Text += "\tFL\t TAS\tROCD\tfuel" + System.Environment.NewLine;
             textBox3.Text += "\t\t[kts]\t[fpm] [kg/min]" + System.Environment.NewLine;
             textBox3.Text += "\t\t\tnom\tnom" + System.Environment.NewLine;
