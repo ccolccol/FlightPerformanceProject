@@ -22,7 +22,8 @@ namespace project1_mod1_outwindow
 
         System.Drawing.Font axisFont;
         System.Drawing.Font labelFont;
-        
+        System.Drawing.Font legendFont;
+
         string path;
         string fileName;
         Aircraft A306;
@@ -48,7 +49,8 @@ namespace project1_mod1_outwindow
             A306 = new Aircraft(fileName);
 
             axisFont = new System.Drawing.Font("Times New Roman", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            labelFont = new System.Drawing.Font("Times New Roman", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0))); 
+            labelFont = new System.Drawing.Font("Times New Roman", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            legendFont = new System.Drawing.Font("Times New Roman", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
         }
         
         private void moveTabs(int newFrontTabIndex)
@@ -130,18 +132,18 @@ namespace project1_mod1_outwindow
             chart1.ChartAreas[0].AxisX.Minimum = 0;
             chart1.ChartAreas[0].AxisX.LabelStyle.Interval = 0.02;
             chart1.ChartAreas[0].AxisX.LabelStyle.Font = axisFont;
-            chart1.ChartAreas[0].AxisX.Title = "Drag coefficient";
+            chart1.ChartAreas[0].AxisX.Title = "Drag Coefficient";
             chart1.ChartAreas[0].AxisX.TitleFont = labelFont;
             chart1.ChartAreas[0].AxisY.LabelStyle.Interval = 0.2;
             chart1.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
-            chart1.ChartAreas[0].AxisY.Title = "Lift coefficient";
+            chart1.ChartAreas[0].AxisY.Title = "Lift Coefficient";
             chart1.ChartAreas[0].AxisY.TitleFont = labelFont;
             chart1.Series[0].Points.DataBindXY(c_D, c_L);
 
             chart1.Series[4].Points.DataBindXY(c_D_k, c_L_k);
         }
 
-        // 阻力图
+        // 阻力图，可以100ft往上加
         private void button10_Click(object sender, EventArgs e)
         {
             List<double> tas = new List<double>();
@@ -186,19 +188,32 @@ namespace project1_mod1_outwindow
 
             chart2.Series[1].Points.DataBindXY(tas, d0);
             chart2.Series[2].Points.DataBindXY(tas, di);
+
+            chart2.Legends[0].Enabled = true;
+            chart2.Legends[0].Font = legendFont;
+            chart2.Legends[0].Position = new System.Windows.Forms.DataVisualization.Charting.ElementPosition(65, 0, 20, 18);
+            foreach (var series in chart2.Series)
+                series.IsVisibleInLegend = false;
+            chart2.Series[0].IsVisibleInLegend = true;
+            chart2.Series[0].LegendText = "Total drag";
+            chart2.Series[1].IsVisibleInLegend = true;
+            chart2.Series[1].LegendText = "Parasite drag";
+            chart2.Series[2].IsVisibleInLegend = true;
+            chart2.Series[2].LegendText = "Induced drag";
         }
         
-        // 所需推力随重量
+        // 所需推力随重量，可以100ft往上加
         private void button11_Click_1(object sender, EventArgs e)
         {
             List<double> tas = new List<double>();
             List<double> t = new List<double>();
-            List<double> tmax = new List<double>();
 
             List<double> t1 = new List<double>();
             List<double> t2 = new List<double>();
 
+
             double h = 18000;
+
             double vmin = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
 
 
@@ -208,14 +223,12 @@ namespace project1_mod1_outwindow
             {
                 tas.Add(TAS);
                 double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
-                double T = A306.Get_T(h, CAS, Aircraft.FlightPhase.Cruise) / 10000;
-                double Tmax = A306.Get_T_max_cruise(h, CAS) / 10000;
+                double T = A306.Get_T(h, CAS, Aircraft.FlightPhase.Cruise) / 1000;
 
                 t.Add(T);
-                tmax.Add(Tmax);
 
-                double T1 = A306.Get_T(h, CAS, Aircraft.FlightPhase.Cruise, m:A306.m_ref + A306.m_ref * 0.4) / 10000;
-                double T2 = A306.Get_T(h, CAS, Aircraft.FlightPhase.Cruise, m: A306.m_ref + A306.m_ref * 0.8) / 10000;
+                double T1 = A306.Get_T(h, CAS, Aircraft.FlightPhase.Cruise, m:A306.m_ref + A306.m_ref * 0.4) / 1000;
+                double T2 = A306.Get_T(h, CAS, Aircraft.FlightPhase.Cruise, m: A306.m_ref + A306.m_ref * 0.8) / 1000;
                 t1.Add(T1);
                 t2.Add(T2);
             }
@@ -224,11 +237,13 @@ namespace project1_mod1_outwindow
             for (int i = 0; i < tas.Count; i++)
                 tas[i] = Units.mps2kt(tas[i]);
 
+            
             chart3.ChartAreas[0].AxisX.Minimum = (int)(tas[0] - tas[0] * 0.05);
             chart3.ChartAreas[0].AxisX.LabelStyle.Interval = 50;
             chart3.ChartAreas[0].AxisX.LabelStyle.Font = axisFont;
             chart3.ChartAreas[0].AxisX.Title = "TAS kt";
             chart3.ChartAreas[0].AxisX.TitleFont = labelFont;
+            chart3.ChartAreas[0].AxisY.LabelStyle.Interval = 50;
             chart3.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
             chart3.ChartAreas[0].AxisY.Title = "Required Thrust 10000 N";
             chart3.ChartAreas[0].AxisY.TitleFont = labelFont;
@@ -236,9 +251,21 @@ namespace project1_mod1_outwindow
             chart3.Series[0].Points.DataBindXY(tas, t);
             chart3.Series[1].Points.DataBindXY(tas, t1);
             chart3.Series[2].Points.DataBindXY(tas, t2);
-        }
 
-        // 所需推力随高度
+            chart3.Legends[0].Enabled = true;
+            chart3.Legends[0].Font = legendFont;
+            chart3.Legends[0].Position = new System.Windows.Forms.DataVisualization.Charting.ElementPosition(60, 5, 20, 18);
+            foreach (var series in chart3.Series)
+                series.IsVisibleInLegend = false;
+            chart3.Series[0].IsVisibleInLegend = true;
+            chart3.Series[0].LegendText = "m = m_ref";
+            chart3.Series[1].IsVisibleInLegend = true;
+            chart3.Series[1].LegendText = "m = 1.4 m_ref";
+            chart3.Series[2].IsVisibleInLegend = true;
+            chart3.Series[2].LegendText = "m = 1.8 m_ref";
+        }
+        
+        // 所需推力随高度，可以设定h1往上加
         private void button12_Click(object sender, EventArgs e)
         {
             List<double> tas = new List<double>();
@@ -312,9 +339,21 @@ namespace project1_mod1_outwindow
             chart4.Series[0].Points.DataBindXY(tas, t);
             chart4.Series[1].Points.DataBindXY(tas1, t1);
             chart4.Series[2].Points.DataBindXY(tas2, t2);
+
+            chart4.Legends[0].Enabled = true;
+            chart4.Legends[0].Font = legendFont;
+            chart4.Legends[0].Position = new System.Windows.Forms.DataVisualization.Charting.ElementPosition(60, 5, 20, 18);
+            foreach (var series in chart4.Series)
+                series.IsVisibleInLegend = false;
+            chart4.Series[0].IsVisibleInLegend = true;
+            chart4.Series[0].LegendText = "h = 15000 ft";
+            chart4.Series[1].IsVisibleInLegend = true;
+            chart4.Series[1].LegendText = "h = 24000 ft";
+            chart4.Series[2].IsVisibleInLegend = true;
+            chart4.Series[2].LegendText = "h = 33000 ft";
         }
 
-        // 可用推力随高度
+        // 可用推力随高度，可以设置h1以100ft增加
         private void button13_Click(object sender, EventArgs e)
         {
             List<double> tas = new List<double>();
@@ -388,6 +427,18 @@ namespace project1_mod1_outwindow
             chart5.Series[0].Points.DataBindXY(tas, tmax);
             chart5.Series[1].Points.DataBindXY(tas1, tmax1);
             chart5.Series[2].Points.DataBindXY(tas2, tmax2);
+
+            chart5.Legends[0].Enabled = true;
+            chart5.Legends[0].Font = legendFont;
+            chart5.Legends[0].Position = new System.Windows.Forms.DataVisualization.Charting.ElementPosition(75, 60, 20, 18);
+            foreach (var series in chart5.Series)
+                series.IsVisibleInLegend = false;
+            chart5.Series[0].IsVisibleInLegend = true;
+            chart5.Series[0].LegendText = "h = 15000 ft";
+            chart5.Series[1].IsVisibleInLegend = true;
+            chart5.Series[1].LegendText = "h = 24000 ft";
+            chart5.Series[2].IsVisibleInLegend = true;
+            chart5.Series[2].LegendText = "h = 33000 ft";
         }
 
         // 推力图：久航与远航速度
@@ -553,6 +604,16 @@ namespace project1_mod1_outwindow
 
             chart8.Series[0].Points.DataBindXY(tas, w);
             chart8.Series[1].Points.DataBindXY(tas, wmax);
+
+            chart8.Legends[0].Enabled = true;
+            chart8.Legends[0].Font = legendFont;
+            chart8.Legends[0].Position = new System.Windows.Forms.DataVisualization.Charting.ElementPosition(65, 0, 20, 12);
+            foreach (var series in chart8.Series)
+                series.IsVisibleInLegend = false;
+            chart8.Series[0].IsVisibleInLegend = true;
+            chart8.Series[0].LegendText = "Required power";
+            chart8.Series[1].IsVisibleInLegend = true;
+            chart8.Series[1].LegendText = "Available power";
         }
 
         // 所需推力与所需功率中有利速度
@@ -611,6 +672,16 @@ namespace project1_mod1_outwindow
             chart9.Series[4].Points.DataBindXY(V_e_FromThrust_tas, V_e_FromThrust_t);
             chart9.Series[5].Points.DataBindXY(V_e_FromPower_tas, V_e_FromPower_power);
             chart9.Series[6].Points.DataBindXY(V_e_tas, V_e_ThrustPower);
+
+            chart9.Legends[0].Enabled = true;
+            chart9.Legends[0].Font = legendFont;
+            chart9.Legends[0].Position = new System.Windows.Forms.DataVisualization.Charting.ElementPosition(65, 0, 20, 12);
+            foreach (var series in chart9.Series)
+                series.IsVisibleInLegend = false;
+            chart9.Series[0].IsVisibleInLegend = true;
+            chart9.Series[0].LegendText = "Required thrust";
+            chart9.Series[2].IsVisibleInLegend = true;
+            chart9.Series[2].LegendText = "Required power";
         }
 
         // 剩余功率图：快升与陡升速度
@@ -760,8 +831,27 @@ namespace project1_mod1_outwindow
 
             chart11.Series[0].Points.DataBindXY(tas, t);
             chart11.Series[1].Points.DataBindXY(tas, tmax);
+            chart11.Series[4].BorderDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Solid;
+            chart11.Series[4].BorderWidth = 1;
+            chart11.Series[6].BorderDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Solid;
+            chart11.Series[6].BorderWidth = 1;
             chart11.Series[4].Points.DataBindXY(tas1, t1);
             chart11.Series[6].Points.DataBindXY(tas1, tmax1);
+
+
+            chart11.Legends[0].Enabled = true;
+            chart11.Legends[0].Font = legendFont;
+            chart11.Legends[0].Position = new System.Windows.Forms.DataVisualization.Charting.ElementPosition(60, 0, 26, 24);
+            foreach (var series in chart11.Series)
+                series.IsVisibleInLegend = false;
+            chart11.Series[0].IsVisibleInLegend = true;
+            chart11.Series[0].LegendText = "h = 15000 ft required thrust";
+            chart11.Series[1].IsVisibleInLegend = true;
+            chart11.Series[1].LegendText = "h = 15000 ft available thrust";
+            chart11.Series[4].IsVisibleInLegend = true;
+            chart11.Series[4].LegendText = "h = 32000 ft required thrust";
+            chart11.Series[6].IsVisibleInLegend = true;
+            chart11.Series[6].LegendText = "h = 32000 ft available thrust";
         }
 
         // 抖振边界成因
@@ -857,6 +947,18 @@ namespace project1_mod1_outwindow
             chart12.Series[0].Points.DataBindXY(UBO_Data_M, UBO_Data_C_L_max);
             chart12.Series[1].Points.DataBindXY(m1, c_l1);
             chart12.Series[2].Points.DataBindXY(m2, c_l2);
+
+            chart12.Legends[0].Enabled = true;
+            chart12.Legends[0].Font = legendFont;
+            chart12.Legends[0].Position = new System.Windows.Forms.DataVisualization.Charting.ElementPosition(65, 0, 26, 18);
+            foreach (var series in chart12.Series)
+                series.IsVisibleInLegend = false;
+            chart12.Series[0].IsVisibleInLegend = true;
+            chart12.Series[0].LegendText = "High speed buffet limit";
+            chart12.Series[1].IsVisibleInLegend = true;
+            chart12.Series[1].LegendText = "h = 15000 ft CL - M";
+            chart12.Series[2].IsVisibleInLegend = true;
+            chart12.Series[2].LegendText = "h = 30000 ft CL - M";
         }
 
 
@@ -1083,9 +1185,21 @@ namespace project1_mod1_outwindow
             chart13.Series[3].Points.DataBindXY(ubo_m2, alt2);
             chart13.Series[7].Points.DataBindXY(lbo_m3, alt3);
             chart13.Series[8].Points.DataBindXY(ubo_m3, alt3);
+
+            chart13.Legends[0].Enabled = true;
+            chart13.Legends[0].Font = legendFont;
+            chart13.Legends[0].Position = new System.Windows.Forms.DataVisualization.Charting.ElementPosition(13, 0, 30, 18);
+            foreach (var series in chart13.Series)
+                series.IsVisibleInLegend = false;
+            chart13.Series[0].IsVisibleInLegend = true;
+            chart13.Series[0].LegendText = "m_ref - 0.2 (m_ref - m_min)";
+            chart13.Series[1].IsVisibleInLegend = true;
+            chart13.Series[1].LegendText = "m_ref + 0.1 (m_max - m_ref)";
+            chart13.Series[2].IsVisibleInLegend = true;
+            chart13.Series[2].LegendText = "m_ref + 0.5 (m_max - m_ref)";
         }
 
-        // 重量抖振包线（剪切）
+        // 重量抖振包线（未剪切）
         private void button23_Click(object sender, EventArgs e)
         {
             foreach (var series in chart14.Series)
@@ -1284,9 +1398,21 @@ namespace project1_mod1_outwindow
             chart14.Series[7].Points.DataBindXY(lbo_m3, w3);
             chart14.Series[8].Points.DataBindXY(ubo_m3, w3);
             chart14.Series[9].Points.DataBindXY(M_MO_m, M_MO_w);
+
+            chart14.Legends[0].Enabled = true;
+            chart14.Legends[0].Font = legendFont;
+            chart14.Legends[0].Position = new System.Windows.Forms.DataVisualization.Charting.ElementPosition(78, 0, 14, 18);
+            foreach (var series in chart14.Series)
+                series.IsVisibleInLegend = false;
+            chart14.Series[0].IsVisibleInLegend = true;
+            chart14.Series[0].LegendText = "FL330";
+            chart14.Series[1].IsVisibleInLegend = true;
+            chart14.Series[1].LegendText = "FL350";
+            chart14.Series[2].IsVisibleInLegend = true;
+            chart14.Series[2].LegendText = "FL370";
         }
 
-        // 重量抖振包线（未剪切）
+        // 重量抖振包线（剪切）
         private void button22_Click(object sender, EventArgs e)
         {
             foreach (var series in chart14.Series)
@@ -1535,6 +1661,18 @@ namespace project1_mod1_outwindow
             chart14.Series[3].Points.DataBindXY(ubo_m2, w2);
             chart14.Series[8].Points.DataBindXY(ubo_m3, w3);
             chart14.Series[9].Points.DataBindXY(M_MO_m, M_MO_w);
+
+            chart14.Legends[0].Enabled = true;
+            chart14.Legends[0].Font = legendFont;
+            chart14.Legends[0].Position = new System.Windows.Forms.DataVisualization.Charting.ElementPosition(78, 0, 14, 18);
+            foreach (var series in chart14.Series)
+                series.IsVisibleInLegend = false;
+            chart14.Series[0].IsVisibleInLegend = true;
+            chart14.Series[0].LegendText = "FL330";
+            chart14.Series[1].IsVisibleInLegend = true;
+            chart14.Series[1].LegendText = "FL350";
+            chart14.Series[2].IsVisibleInLegend = true;
+            chart14.Series[2].LegendText = "FL370";
         }
 
 
@@ -1916,6 +2054,26 @@ namespace project1_mod1_outwindow
             chart15.Series[7].Points.DataBindXY(v_v_MO, altitude_v_MO);
             chart15.Series[8].Points.DataBindXY(v_M_MO, altitude_M_MO);
             chart15.Series[9].Points.DataBindXY(v_ubo, altitude_v_ubo);
+
+            chart15.Legends[0].Enabled = true;
+            chart15.Legends[0].Font = legendFont;
+            chart15.Legends[0].Position = new System.Windows.Forms.DataVisualization.Charting.ElementPosition(34, 36, 25, 40);
+            foreach (var series in chart15.Series)
+                series.IsVisibleInLegend = false;
+            chart15.Series[0].IsVisibleInLegend = true;
+            chart15.Series[0].LegendText = "Left thrust line cross-point";
+            chart15.Series[1].IsVisibleInLegend = true;
+            chart15.Series[1].LegendText = "Stall limit";
+            chart15.Series[2].IsVisibleInLegend = true;
+            chart15.Series[2].LegendText = "Low speed buffet limit";
+            chart15.Series[3].IsVisibleInLegend = true;
+            chart15.Series[3].LegendText = "Right thrust line cross-point";
+            chart15.Series[7].IsVisibleInLegend = true;
+            chart15.Series[7].LegendText = "v_MO";
+            chart15.Series[8].IsVisibleInLegend = true;
+            chart15.Series[8].LegendText = "M_MO";
+            chart15.Series[9].IsVisibleInLegend = true;
+            chart15.Series[9].LegendText = "High speed buffet limit";
         }
 
         // 飞行包线（剪切）
@@ -2300,6 +2458,47 @@ namespace project1_mod1_outwindow
             chart15.Series[7].Points.DataBindXY(v_v_MO, altitude_v_MO);
             chart15.Series[8].Points.DataBindXY(v_M_MO, altitude_M_MO);
             chart15.Series[9].Points.DataBindXY(v_ubo, altitude_v_ubo);
+
+            chart15.Legends[0].Enabled = true;
+            chart15.Legends[0].Font = legendFont;
+            chart15.Legends[0].Position = new System.Windows.Forms.DataVisualization.Charting.ElementPosition(42, 36, 25, 30);
+            foreach (var series in chart15.Series)
+                series.IsVisibleInLegend = false;
+            if(v_min_t.Count > 1)
+            {
+                chart15.Series[0].IsVisibleInLegend = true;
+                chart15.Series[0].LegendText = "Left thrust line cross-point";
+            }
+            if (vBuffetWrapVStallFlag == false)
+            {
+                chart15.Series[1].IsVisibleInLegend = true;
+                chart15.Series[1].LegendText = "Stall limit";
+            }
+            if(v_buffet.Count > 1)
+            {
+                chart15.Series[2].IsVisibleInLegend = true;
+                chart15.Series[2].LegendText = "Low speed buffet limit";
+            }
+            if(v_max_t.Count > 1)
+            {
+                chart15.Series[3].IsVisibleInLegend = true;
+                chart15.Series[3].LegendText = "Right thrust line cross-point";
+            }
+            if(v_v_MO.Count > 1)
+            {
+                chart15.Series[7].IsVisibleInLegend = true;
+                chart15.Series[7].LegendText = "v_MO";
+            }
+            if(v_M_MO.Count > 1)
+            {
+                chart15.Series[8].IsVisibleInLegend = true;
+                chart15.Series[8].LegendText = "M_MO";
+            }
+            if(v_ubo.Count > 1)
+            {
+                chart15.Series[9].IsVisibleInLegend = true;
+                chart15.Series[9].LegendText = "High speed buffet limit";
+            }
         }
 
         public double GetBFLSpread(string fileName, double numberOfEngines, double CAS)
@@ -2387,6 +2586,16 @@ namespace project1_mod1_outwindow
             chart16.Series[1].Points.DataBindXY(v1, bflAccelerateStop);
             chart16.Series[4].Points.DataBindXY(bflHorizontalLine_v1, bflHorizontalLine_length);
             chart16.Series[5].Points.DataBindXY(bflVerticalLine_v1, bflVerticalLine_length);
+
+            chart16.Legends[0].Enabled = true;
+            chart16.Legends[0].Font = legendFont;
+            chart16.Legends[0].Position = new System.Windows.Forms.DataVisualization.Charting.ElementPosition(60, 5, 18, 12);
+            foreach (var series in chart16.Series)
+                series.IsVisibleInLegend = false;
+            chart16.Series[0].IsVisibleInLegend = true;
+            chart16.Series[0].LegendText = "Accelerate-go";
+            chart16.Series[1].IsVisibleInLegend = true;
+            chart16.Series[1].LegendText = "Accelerate-stop";
         }
 
         // 爬升梯度随速度
@@ -2719,6 +2928,24 @@ namespace project1_mod1_outwindow
             chart19.Series[4].Points.DataBindXY(v_sr_max, sr_max);
             chart19.Series[5].Points.DataBindXY(v_sr_99max, sr_99max);
             chart19.Series[7].Points.DataBindXY(v_constM, sr_constM);
+
+            chart19.Legends[0].Enabled = true;
+            chart19.Legends[0].Font = legendFont;
+            chart19.Legends[0].Position = new System.Windows.Forms.DataVisualization.Charting.ElementPosition(70, 45, 30, 34);
+            foreach (var series in chart19.Series)
+                series.IsVisibleInLegend = false;
+            chart19.Series[0].IsVisibleInLegend = true;
+            chart19.Series[0].LegendText = "m_ref - 0.5 (m_ref - m_min)";
+            chart19.Series[1].IsVisibleInLegend = true;
+            chart19.Series[1].LegendText = "m_ref - 0.7 (m_ref - m_min)";
+            chart19.Series[2].IsVisibleInLegend = true;
+            chart19.Series[2].LegendText = "m_ref - 0.9 (m_ref - m_min)";
+            chart19.Series[4].IsVisibleInLegend = true;
+            chart19.Series[4].LegendText = "MRC";
+            chart19.Series[5].IsVisibleInLegend = true;
+            chart19.Series[5].LegendText = "LRC";
+            chart19.Series[7].IsVisibleInLegend = true;
+            chart19.Series[7].LegendText = "Constant M cruise";
         }
 
         // 燃油里程与高度：最佳巡航高度
@@ -2777,6 +3004,20 @@ namespace project1_mod1_outwindow
             chart20.Series[1].Points.DataBindXY(sr1, h);
             chart20.Series[2].Points.DataBindXY(sr2, h);
             chart20.Series[4].Points.DataBindXY(sr_sr_max, h_sr_max);
+
+            chart20.Legends[0].Enabled = true;
+            chart20.Legends[0].Font = legendFont;
+            chart20.Legends[0].Position = new System.Windows.Forms.DataVisualization.Charting.ElementPosition(70, 55, 30, 22);
+            foreach (var series in chart20.Series)
+                series.IsVisibleInLegend = false;
+            chart20.Series[0].IsVisibleInLegend = true;
+            chart20.Series[0].LegendText = "m_ref + 0.4 (m_max - m_ref)";
+            chart20.Series[1].IsVisibleInLegend = true;
+            chart20.Series[1].LegendText = "m_ref + 0.2 (m_max - m_ref)";
+            chart20.Series[2].IsVisibleInLegend = true;
+            chart20.Series[2].LegendText = "m_ref";
+            chart20.Series[4].IsVisibleInLegend = true;
+            chart20.Series[4].LegendText = "Optimal altitude";
         }
 
         // 巡航数值表
