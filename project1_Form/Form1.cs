@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using AircraftModel;
 using AtmosphereModel;
+using System.Text.RegularExpressions;
 
 namespace project1_mod1_outwindow
 {
@@ -37,6 +34,8 @@ namespace project1_mod1_outwindow
         private void Form1_Load(object sender, EventArgs e)
         {
             tabs = new TabControl[] { tabControl1, tabControl2, tabControl3, tabControl4, tabControl5, tabControl6, tabControl7 };
+            foreach (var tab in tabs)
+                tab.BringToFront();
             for (int i = 0; i < tabs.Count(); i++)
                 movedTabs.Add(tabs[i]);
             currentFrontTabIndex = 6;
@@ -143,15 +142,36 @@ namespace project1_mod1_outwindow
             chart1.Series[4].Points.DataBindXY(c_D_k, c_L_k);
         }
 
-        // 阻力图，可以100ft往上加
+        // 阻力图
+        bool isClickedDrag = false;
         private void button10_Click(object sender, EventArgs e)
         {
+            double h = 18000;
+
+            if (isClickedDrag == false || textBox4.Text == "")
+            {
+                isClickedDrag = true;
+                textBox4.ReadOnly = false;
+            }
+            else if(Regex.IsMatch(textBox4.Text, @"^[\d]{1,5}$"))
+            {
+                if (double.Parse(textBox4.Text) <= A306.H_max_AP)
+                    h = A306.H_max_AP + 1;
+                else if (double.Parse(textBox4.Text) > A306.h_MO)
+                    h = A306.h_MO;
+                else
+                    h = double.Parse(textBox4.Text);
+            }
+            textBox4.Text = h.ToString();
+
+
+
             List<double> tas = new List<double>();
             List<double> d = new List<double>();
             List<double> d0 = new List<double>();
             List<double> di = new List<double>();
 
-            double h = 18000;
+            
             double vmin = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
 
             for (double TAS
@@ -200,11 +220,34 @@ namespace project1_mod1_outwindow
             chart2.Series[1].LegendText = "Parasite drag";
             chart2.Series[2].IsVisibleInLegend = true;
             chart2.Series[2].LegendText = "Induced drag";
+
+            this.Text = h.ToString();
         }
-        
-        // 所需推力随重量，可以100ft往上加
+
+        // 所需推力随重量
+        bool isClickedFRwithW = false;
         private void button11_Click_1(object sender, EventArgs e)
         {
+            double m_refCoefficient = 1.4;
+
+            if (isClickedFRwithW == false || textBox7.Text == "")
+            {
+                isClickedFRwithW = true;
+                textBox7.ReadOnly = false;
+            }
+            else if (Regex.IsMatch(textBox7.Text, @"^[\d][\.]?[\d]{0,2}$"))
+            {
+                if (double.Parse(textBox7.Text) < 1)
+                    m_refCoefficient = 1;
+                else if (double.Parse(textBox7.Text) > 2)
+                    m_refCoefficient = 2;
+                else
+                    m_refCoefficient = double.Parse(textBox7.Text);
+            }
+            textBox7.Text = m_refCoefficient.ToString();
+
+
+
             List<double> tas = new List<double>();
             List<double> t = new List<double>();
 
@@ -227,7 +270,7 @@ namespace project1_mod1_outwindow
 
                 t.Add(T);
 
-                double T1 = A306.Get_T(h, CAS, Aircraft.FlightPhase.Cruise, m:A306.m_ref + A306.m_ref * 0.4) / 1000;
+                double T1 = A306.Get_T(h, CAS, Aircraft.FlightPhase.Cruise, m:A306.m_ref * m_refCoefficient) / 1000;
                 double T2 = A306.Get_T(h, CAS, Aircraft.FlightPhase.Cruise, m: A306.m_ref + A306.m_ref * 0.8) / 1000;
                 t1.Add(T1);
                 t2.Add(T2);
@@ -260,12 +303,13 @@ namespace project1_mod1_outwindow
             chart3.Series[0].IsVisibleInLegend = true;
             chart3.Series[0].LegendText = "m = m_ref";
             chart3.Series[1].IsVisibleInLegend = true;
-            chart3.Series[1].LegendText = "m = 1.4 m_ref";
+            chart3.Series[1].LegendText = $"m = {m_refCoefficient} m_ref";
             chart3.Series[2].IsVisibleInLegend = true;
             chart3.Series[2].LegendText = "m = 1.8 m_ref";
         }
-        
-        // 所需推力随高度，可以设定h1往上加
+
+        bool isClickedFRwithh = false;
+        // 所需推力随高度
         private void button12_Click(object sender, EventArgs e)
         {
             List<double> tas = new List<double>();
@@ -280,6 +324,23 @@ namespace project1_mod1_outwindow
             double h = 15000;
             double h1 = 24000;
             double h2 = 33000;
+
+            if (isClickedFRwithh == false || textBox6.Text == "")
+            {
+                isClickedFRwithh = true;
+                textBox6.ReadOnly = false;
+            }
+            else if (Regex.IsMatch(textBox6.Text, @"^[\d]{1,5}$"))
+            {
+                if (double.Parse(textBox6.Text) < 15000)
+                    h1 = 15000;
+                else if (double.Parse(textBox6.Text) > A306.h_MO)
+                    h1 = A306.h_MO;
+                else
+                    h1 = double.Parse(textBox6.Text);
+            }
+            textBox6.Text = h1.ToString();
+
 
             double vmin = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
 
@@ -348,12 +409,13 @@ namespace project1_mod1_outwindow
             chart4.Series[0].IsVisibleInLegend = true;
             chart4.Series[0].LegendText = "h = 15000 ft";
             chart4.Series[1].IsVisibleInLegend = true;
-            chart4.Series[1].LegendText = "h = 24000 ft";
+            chart4.Series[1].LegendText = $"h = {h1} ft";
             chart4.Series[2].IsVisibleInLegend = true;
             chart4.Series[2].LegendText = "h = 33000 ft";
         }
 
-        // 可用推力随高度，可以设置h1以100ft增加
+        // 可用推力随高度
+        bool isClickedFawithh = false;
         private void button13_Click(object sender, EventArgs e)
         {
             List<double> tas = new List<double>();
@@ -368,6 +430,23 @@ namespace project1_mod1_outwindow
             double h = 15000;
             double h1 = 24000;
             double h2 = 33000;
+
+            if (isClickedFawithh == false || textBox8.Text == "")
+            {
+                isClickedFawithh = true;
+                textBox8.ReadOnly = false;
+            }
+            else if (Regex.IsMatch(textBox8.Text, @"^[\d]{1,5}$"))
+            {
+                if (double.Parse(textBox8.Text) < 15000)
+                    h1 = 15000;
+                else if (double.Parse(textBox8.Text) > A306.h_MO)
+                    h1 = A306.h_MO;
+                else
+                    h1 = double.Parse(textBox8.Text);
+            }
+            textBox8.Text = h1.ToString();
+
 
             double vmin = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
 
@@ -436,12 +515,13 @@ namespace project1_mod1_outwindow
             chart5.Series[0].IsVisibleInLegend = true;
             chart5.Series[0].LegendText = "h = 15000 ft";
             chart5.Series[1].IsVisibleInLegend = true;
-            chart5.Series[1].LegendText = "h = 24000 ft";
+            chart5.Series[1].LegendText = $"h = {h1} ft";
             chart5.Series[2].IsVisibleInLegend = true;
             chart5.Series[2].LegendText = "h = 33000 ft";
         }
 
         // 推力图：久航与远航速度
+        bool isClickedvlongduranceandmrc = false;
         private void button14_Click(object sender, EventArgs e)
         {
             List<double> tas = new List<double>();
@@ -449,6 +529,24 @@ namespace project1_mod1_outwindow
             List<double> slope = new List<double>();
 
             double h = 18000;
+
+            if (isClickedvlongduranceandmrc == false || textBox9.Text == "")
+            {
+                isClickedvlongduranceandmrc = true;
+                textBox9.ReadOnly = false;
+            }
+            else if (Regex.IsMatch(textBox9.Text, @"^[\d]{1,5}$"))
+            {
+                if (double.Parse(textBox9.Text) < 15000)
+                    h = 15000;
+                else if (double.Parse(textBox9.Text) > A306.h_MO)
+                    h = A306.h_MO;
+                else
+                    h = double.Parse(textBox9.Text);
+            }
+            textBox9.Text = h.ToString();
+
+
             double vmin = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
 
 
@@ -492,6 +590,8 @@ namespace project1_mod1_outwindow
         }
 
         // 剩余推力图：陡升速度
+        bool isClickedvsteepclimbinredundantF = false;
+        double h_ceiling_vsteepclimbinredundantF = 0;
         private void button15_Click(object sender, EventArgs e)
         {
             List<double> tas = new List<double>();
@@ -500,6 +600,47 @@ namespace project1_mod1_outwindow
             List<double> redundant_t = new List<double>();
 
             double h = 28000;
+
+            if (isClickedvsteepclimbinredundantF == false || textBox10.Text == "")
+            {
+                isClickedvsteepclimbinredundantF = true;
+                textBox10.ReadOnly = false;
+
+
+                List<double> thrust = new List<double>();
+                for (double alt = 32000; ; alt++)
+                {
+                    double v_stall = A306.Get_v_stall(alt, Aircraft.FlightPhase.Cruise);
+                    double Tmax = A306.Get_T_max_cruise(alt, Units.kt2mps(v_stall));
+
+                    for (double CAS = v_stall; ; CAS++)
+                    {
+                        double T = A306.Get_T(alt, Units.kt2mps(CAS), Aircraft.FlightPhase.Cruise);
+                        thrust.Add(T);
+
+                        if (thrust.Count > 0 && T > thrust.Min())
+                            break;
+                    }
+
+                    if (thrust.Min() >= Tmax)
+                    {
+                        h_ceiling_vsteepclimbinredundantF = ((int)alt / 100) * 100;
+                        break;
+                    }
+                }
+            }
+            else if (Regex.IsMatch(textBox10.Text, @"^[\d]{1,5}$"))
+            {
+                if (double.Parse(textBox10.Text) < 15000)
+                    h = 15000;
+                else if (double.Parse(textBox10.Text) > h_ceiling_vsteepclimbinredundantF)
+                    h = h_ceiling_vsteepclimbinredundantF;
+                else
+                    h = double.Parse(textBox10.Text);
+            }
+            textBox10.Text = h.ToString();
+
+
             double vmin = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
 
 
@@ -563,6 +704,7 @@ namespace project1_mod1_outwindow
         }
 
         // 所需功率与可用功率图
+        bool isClickedWRandWa = false;
         private void button16_Click(object sender, EventArgs e)
         {
             List<double> tas = new List<double>();
@@ -571,6 +713,24 @@ namespace project1_mod1_outwindow
 
 
             double h = 18000;
+
+            if (isClickedWRandWa == false || textBox18.Text == "")
+            {
+                isClickedWRandWa = true;
+                textBox18.ReadOnly = false;
+            }
+            else if (Regex.IsMatch(textBox18.Text, @"^[\d]{1,5}$"))
+            {
+                if (double.Parse(textBox18.Text) < 15000)
+                    h = 15000;
+                else if (double.Parse(textBox18.Text) > A306.h_MO)
+                    h = A306.h_MO;
+                else
+                    h = double.Parse(textBox18.Text);
+            }
+            textBox18.Text = h.ToString();
+
+
             double vmin = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
 
 
@@ -599,7 +759,7 @@ namespace project1_mod1_outwindow
             chart8.ChartAreas[0].AxisX.Title = "TAS kt";
             chart8.ChartAreas[0].AxisX.TitleFont = labelFont;
             chart8.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
-            chart8.ChartAreas[0].AxisY.Title = "Power 1000 W";
+            chart8.ChartAreas[0].AxisY.Title = "Power 10000000 W";
             chart8.ChartAreas[0].AxisY.TitleFont = labelFont;
 
             chart8.Series[0].Points.DataBindXY(tas, w);
@@ -617,6 +777,7 @@ namespace project1_mod1_outwindow
         }
 
         // 所需推力与所需功率中有利速度
+        bool isCilckedveinFRandWR = false;
         private void button17_Click(object sender, EventArgs e)
         {
             List<double> tas = new List<double>();
@@ -625,6 +786,24 @@ namespace project1_mod1_outwindow
             List<double> slope = new List<double>();
 
             double h = 32000;
+
+            if (isCilckedveinFRandWR == false || textBox12.Text == "")
+            {
+                isCilckedveinFRandWR = true;
+                textBox12.ReadOnly = false;
+            }
+            else if (Regex.IsMatch(textBox12.Text, @"^[\d]{1,5}$"))
+            {
+                if (double.Parse(textBox12.Text) < 15000)
+                    h = 15000;
+                else if (double.Parse(textBox12.Text) > A306.h_MO)
+                    h = A306.h_MO;
+                else
+                    h = double.Parse(textBox12.Text);
+            }
+            textBox12.Text = h.ToString();
+
+
             double vmin = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
 
 
@@ -663,7 +842,7 @@ namespace project1_mod1_outwindow
             chart9.ChartAreas[0].AxisX.Title = "TAS kt";
             chart9.ChartAreas[0].AxisX.TitleFont = labelFont;
             chart9.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
-            chart9.ChartAreas[0].AxisY.Title = "Required Thrust 10000 N, Required Power 100 W";
+            chart9.ChartAreas[0].AxisY.Title = "Required Thrust 10000 N, Required Power 1000000 W";
             chart9.ChartAreas[0].AxisY.TitleFont = labelFont;
             
 
@@ -685,6 +864,8 @@ namespace project1_mod1_outwindow
         }
 
         // 剩余功率图：快升与陡升速度
+        bool isClickedvfastclimbsteepclimbinredundantW = false;
+        double h_ceiling_vfastclimbsteepclimbinredundantW = 0;
         private void button18_Click(object sender, EventArgs e)
         {
             List<double> tas = new List<double>();
@@ -694,6 +875,46 @@ namespace project1_mod1_outwindow
             List<double> slope = new List<double>();
 
             double h = 18000;
+
+            if (isClickedvfastclimbsteepclimbinredundantW == false || textBox13.Text == "")
+            {
+                isClickedvfastclimbsteepclimbinredundantW = true;
+                textBox13.ReadOnly = false;
+
+                List<double> thrust = new List<double>();
+                for (double alt = 32000; ; alt++)
+                {
+                    double v_stall = A306.Get_v_stall(alt, Aircraft.FlightPhase.Cruise);
+                    double Tmax = A306.Get_T_max_cruise(alt, Units.kt2mps(v_stall));
+
+                    for (double CAS = v_stall; ; CAS++)
+                    {
+                        double T = A306.Get_T(alt, Units.kt2mps(CAS), Aircraft.FlightPhase.Cruise);
+                        thrust.Add(T);
+
+                        if (thrust.Count > 0 && T > thrust.Min())
+                            break;
+                    }
+
+                    if (thrust.Min() >= Tmax)
+                    {
+                        h_ceiling_vfastclimbsteepclimbinredundantW = ((int)alt / 100) * 100;
+                        break;
+                    }
+                }
+            }
+            else if (Regex.IsMatch(textBox13.Text, @"^[\d]{1,5}$"))
+            {
+                if (double.Parse(textBox13.Text) < 15000)
+                    h = 15000;
+                else if (double.Parse(textBox13.Text) > h_ceiling_vfastclimbsteepclimbinredundantW)
+                    h = h_ceiling_vfastclimbsteepclimbinredundantW;
+                else
+                    h = double.Parse(textBox13.Text);
+            }
+            textBox13.Text = h.ToString();
+
+
             double vmin = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
 
 
@@ -758,7 +979,7 @@ namespace project1_mod1_outwindow
             chart10.ChartAreas[0].AxisX.Title = "TAS kt";
             chart10.ChartAreas[0].AxisX.TitleFont = labelFont;
             chart10.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
-            chart10.ChartAreas[0].AxisY.Title = "Redundant Power 100 W";
+            chart10.ChartAreas[0].AxisY.Title = "Redundant Power 1000000 W";
             chart10.ChartAreas[0].AxisY.TitleFont = labelFont;
 
             chart10.Series[0].Points.DataBindXY(tas, redundant_w);
@@ -767,6 +988,7 @@ namespace project1_mod1_outwindow
         }
 
         // 推力线左右交点
+        bool isClickedleftrightcrosspointinF_V = false;
         private void button19_Click(object sender, EventArgs e)
         {
             List<double> tas = new List<double>();
@@ -780,6 +1002,23 @@ namespace project1_mod1_outwindow
 
             double h = 15000;
             double h1 = 32000;
+
+            if (isClickedleftrightcrosspointinF_V == false || textBox14.Text == "")
+            {
+                isClickedleftrightcrosspointinF_V = true;
+                textBox14.ReadOnly = false;
+            }
+            else if (Regex.IsMatch(textBox14.Text, @"^[\d]{1,5}$"))
+            {
+                if (double.Parse(textBox14.Text) < 15000)
+                    h1 = 15000;
+                else if (double.Parse(textBox14.Text) > A306.h_MO)
+                    h1 = A306.h_MO;
+                else
+                    h1 = double.Parse(textBox14.Text);
+            }
+            textBox14.Text = h1.ToString();
+
 
             double vmin = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
 
@@ -849,12 +1088,13 @@ namespace project1_mod1_outwindow
             chart11.Series[1].IsVisibleInLegend = true;
             chart11.Series[1].LegendText = "h = 15000 ft available thrust";
             chart11.Series[4].IsVisibleInLegend = true;
-            chart11.Series[4].LegendText = "h = 32000 ft required thrust";
+            chart11.Series[4].LegendText = $"h = {h1} ft required thrust";
             chart11.Series[6].IsVisibleInLegend = true;
-            chart11.Series[6].LegendText = "h = 32000 ft available thrust";
+            chart11.Series[6].LegendText = $"h = {h1} ft available thrust";
         }
 
         // 抖振边界成因
+        bool isClickedbuffetboundary = false;
         private void button20_Click(object sender, EventArgs e)
         {
             List<double> m1 = new List<double>();
@@ -893,6 +1133,23 @@ namespace project1_mod1_outwindow
             double h1 = 15000;
             double h2 = 30000;
 
+            if (isClickedbuffetboundary == false || textBox15.Text == "")
+            {
+                isClickedbuffetboundary = true;
+                textBox15.ReadOnly = false;
+            }
+            else if (Regex.IsMatch(textBox15.Text, @"^[\d]{1,5}$"))
+            {
+                if (double.Parse(textBox15.Text) < 15000)
+                    h2 = 15000;
+                else if (double.Parse(textBox15.Text) > A306.h_MO)
+                    h2 = A306.h_MO;
+                else
+                    h2 = double.Parse(textBox15.Text);
+            }
+            textBox15.Text = h2.ToString();
+
+
             double CAS_min = A306.Get_v_stall(h1, Aircraft.FlightPhase.Climb);
             double TAS_min = AtmosphereEnviroment.Get_TAS(h1, Units.kt2mps(CAS_min));
             double initialM = TAS_min / AtmosphereEnviroment.Get_a(h1);
@@ -923,11 +1180,8 @@ namespace project1_mod1_outwindow
                 TAS = M * AtmosphereEnviroment.Get_a(h2);
                 CAS = AtmosphereEnviroment.Get_CAS(h2, TAS);
                 C_L = A306.Get_C_L(h2, CAS);
-                if (C_L <= c_l1.Max())
-                {
-                    m2.Add(M);
-                    c_l2.Add(C_L);
-                }
+                m2.Add(M);
+                c_l2.Add(C_L);
             }
 
             chart12.ChartAreas[0].AxisX.Minimum = (int)((UBO_Data_M[0] - UBO_Data_M[0] * 0.1) * 10) * 0.1;
@@ -958,7 +1212,7 @@ namespace project1_mod1_outwindow
             chart12.Series[1].IsVisibleInLegend = true;
             chart12.Series[1].LegendText = "h = 15000 ft CL - M";
             chart12.Series[2].IsVisibleInLegend = true;
-            chart12.Series[2].LegendText = "h = 30000 ft CL - M";
+            chart12.Series[2].LegendText = $"h = {h2} ft CL - M";
         }
 
 
@@ -999,6 +1253,7 @@ namespace project1_mod1_outwindow
 
 
         // 高度抖振包线
+        bool isClickedbuffetlimitwithh = false;
         private void button21_Click(object sender, EventArgs e)
         {
             List<double> alt1 = new List<double>();
@@ -1013,6 +1268,24 @@ namespace project1_mod1_outwindow
 
             double m_low = A306.m_ref - (A306.m_ref - A306.m_min) * 0.2;
             double m_middle = A306.m_ref + (A306.m_max - A306.m_ref) * 0.1;
+
+            if (isClickedbuffetlimitwithh == false || textBox16.Text == "")
+            {
+                isClickedbuffetlimitwithh = true;
+                textBox16.ReadOnly = false;
+            }
+            else if (Regex.IsMatch(textBox16.Text, @"^[\d]{1,6}$"))
+            {
+                if (double.Parse(textBox16.Text) < A306.m_min)
+                    m_middle = A306.m_min;
+                else if (double.Parse(textBox16.Text) > A306.m_max)
+                    m_middle = A306.m_max;
+                else
+                    m_middle = double.Parse(textBox16.Text);
+            }
+            textBox16.Text = m_middle.ToString();
+
+
             double m_high = A306.m_ref + (A306.m_max - A306.m_ref) * 0.5;
 
 
@@ -1156,24 +1429,30 @@ namespace project1_mod1_outwindow
             lbo_m3.Add(buffetM_h_ceiling);
             ubo_m3.Add(buffetM_h_ceiling);
 
-            for (int i = 0; i < alt1.Count; i++)
+            int maxCount = Math.Max(alt1.Count, alt2.Count);
+            for (int i = 0; i < maxCount; i++)
             {
-                alt1[i] /= 100;
+                if(i < alt1.Count)
+                    alt1[i] /= 100;
                 if (i < alt2.Count)
                     alt2[i] /= 100;
                 if (i < alt3.Count)
                     alt3[i] /= 100;
             }
 
-            chart13.ChartAreas[0].AxisX.Minimum = (int)((lbo_m1[0] - lbo_m1[0] * 0.05) * 20) * 0.05;
-            chart13.ChartAreas[0].AxisX.Maximum = (int)((ubo_m1[0] + ubo_m1[0] * 0.1) * 10) * 0.1;
+            double axisXMin = Math.Min(lbo_m1[0], lbo_m2[0]);
+            double axisXMax = Math.Max(ubo_m1[0], ubo_m2[0]);
+
+            chart13.ChartAreas[0].AxisX.Minimum = (int)((axisXMin - axisXMin * 0.05) * 20) * 0.05;
+            chart13.ChartAreas[0].AxisX.Maximum = (int)((axisXMax + axisXMax * 0.1) * 10) * 0.1;
             chart13.ChartAreas[0].AxisX.LabelStyle.Interval = 0.05;
             chart13.ChartAreas[0].AxisX.LabelStyle.Font = axisFont;
             chart13.ChartAreas[0].AxisX.Title = "M";
             chart13.ChartAreas[0].AxisX.TitleFont = labelFont;
 
+            double axisYMax = Math.Max(alt1[alt1.Count - 1], alt2[alt2.Count - 1]);
             chart13.ChartAreas[0].AxisY.Minimum = alt1[0];
-            chart13.ChartAreas[0].AxisY.Maximum = (int)((alt1[alt1.Count - 1] + alt1[alt1.Count - 1] * 0.05) / 10) * 10;
+            chart13.ChartAreas[0].AxisY.Maximum = (int)((axisYMax + axisYMax * 0.05) / 10) * 10;
             chart13.ChartAreas[0].AxisY.LabelStyle.Interval = 20;
             chart13.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
             chart13.ChartAreas[0].AxisY.Title = "Altitude 100 ft";
@@ -1188,18 +1467,25 @@ namespace project1_mod1_outwindow
 
             chart13.Legends[0].Enabled = true;
             chart13.Legends[0].Font = legendFont;
-            chart13.Legends[0].Position = new System.Windows.Forms.DataVisualization.Charting.ElementPosition(13, 0, 30, 18);
+            chart13.Legends[0].Position = new System.Windows.Forms.DataVisualization.Charting.ElementPosition(15, 0, 25, 32);
             foreach (var series in chart13.Series)
                 series.IsVisibleInLegend = false;
             chart13.Series[0].IsVisibleInLegend = true;
-            chart13.Series[0].LegendText = "m_ref - 0.2 (m_ref - m_min)";
+            chart13.Series[0].LegendText = $"{m_low} kg low buffet limit";
             chart13.Series[1].IsVisibleInLegend = true;
-            chart13.Series[1].LegendText = "m_ref + 0.1 (m_max - m_ref)";
+            chart13.Series[1].LegendText = $"{m_low} kg high buffet limit";
             chart13.Series[2].IsVisibleInLegend = true;
-            chart13.Series[2].LegendText = "m_ref + 0.5 (m_max - m_ref)";
+            chart13.Series[2].LegendText = $"{m_middle} kg low buffet limit";
+            chart13.Series[3].IsVisibleInLegend = true;
+            chart13.Series[3].LegendText = $"{m_middle} kg high buffet limit";
+            chart13.Series[7].IsVisibleInLegend = true;
+            chart13.Series[7].LegendText = $"{m_high} kg low buffet limit";
+            chart13.Series[8].IsVisibleInLegend = true;
+            chart13.Series[8].LegendText = $"{m_high} kg high buffet limit";
         }
 
         // 重量抖振包线（未剪切）
+        bool isClickedbuffetlimitwithW = false;
         private void button23_Click(object sender, EventArgs e)
         {
             foreach (var series in chart14.Series)
@@ -1218,6 +1504,24 @@ namespace project1_mod1_outwindow
 
             double h_low = 33000;
             double h_middle = 35000;
+
+            if (isClickedbuffetlimitwithW == false || textBox17.Text == "")
+            {
+                isClickedbuffetlimitwithW = true;
+                textBox17.ReadOnly = false;
+            }
+            else if (Regex.IsMatch(textBox17.Text, @"^[\d]{1,5}$"))
+            {
+                if (double.Parse(textBox17.Text) < 30000)
+                    h_middle = 30000;
+                else if (double.Parse(textBox17.Text) > 39000)
+                    h_middle = 39000;
+                else
+                    h_middle = double.Parse(textBox17.Text);
+            }
+            textBox17.Text = h_middle.ToString();
+
+
             double h_high = 37000;
 
 
@@ -1372,9 +1676,9 @@ namespace project1_mod1_outwindow
             for (int i = 0; i < w3.Count; i++)
                 w3[i] /= 1000;
 
-
+            double axisYMax = Math.Max(w1[w1.Count - 1], w2[w2.Count - 1]);
             List<double> M_MO_m = new List<double>() { A306.M_MO, A306.M_MO };
-            List<double> M_MO_w = new List<double>() { 0, w1[w1.Count - 1] + w1[w1.Count - 1] * 0.01 };
+            List<double> M_MO_w = new List<double>() { 0, axisYMax + axisYMax * 0.01 };
 
 
             chart14.ChartAreas[0].AxisX.Minimum = (int)((lbo_m1[0] - lbo_m1[0] * 0.05) * 20) * 0.05;
@@ -1385,7 +1689,7 @@ namespace project1_mod1_outwindow
             chart14.ChartAreas[0].AxisX.TitleFont = labelFont;
 
             chart14.ChartAreas[0].AxisY.Minimum = w1[0];
-            chart14.ChartAreas[0].AxisY.Maximum = (int)((w1[w1.Count - 1] + w1[w1.Count - 1] * 0.1) / 10) * 10;
+            chart14.ChartAreas[0].AxisY.Maximum = (int)((axisYMax + axisYMax * 0.1) / 10) * 10;
             chart14.ChartAreas[0].AxisY.LabelStyle.Interval = 20;
             chart14.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
             chart14.ChartAreas[0].AxisY.Title = "Mass ton";
@@ -1407,7 +1711,7 @@ namespace project1_mod1_outwindow
             chart14.Series[0].IsVisibleInLegend = true;
             chart14.Series[0].LegendText = "FL330";
             chart14.Series[1].IsVisibleInLegend = true;
-            chart14.Series[1].LegendText = "FL350";
+            chart14.Series[1].LegendText = $"h = {h_middle} ft";
             chart14.Series[2].IsVisibleInLegend = true;
             chart14.Series[2].LegendText = "FL370";
         }
@@ -1431,6 +1735,24 @@ namespace project1_mod1_outwindow
 
             double h_low = 33000;
             double h_middle = 35000;
+
+            if (isClickedbuffetlimitwithW == false || textBox17.Text == "")
+            {
+                isClickedbuffetlimitwithW = true;
+                textBox17.ReadOnly = false;
+            }
+            else if (Regex.IsMatch(textBox17.Text, @"^[\d]{1,5}$"))
+            {
+                if (double.Parse(textBox17.Text) < 30000)
+                    h_middle = 30000;
+                else if (double.Parse(textBox17.Text) > 39000)
+                    h_middle = 39000;
+                else
+                    h_middle = double.Parse(textBox17.Text);
+            }
+            textBox17.Text = h_middle.ToString();
+
+
             double h_high = 37000;
 
 
@@ -1585,7 +1907,7 @@ namespace project1_mod1_outwindow
             for (int i = 0; i < w3.Count; i++)
                 w3[i] /= 1000;
 
-
+            
             List<double> M_MO_m = new List<double>() { A306.M_MO };
             List<double> M_MO_w = new List<double>() { 0 };
 
@@ -1597,8 +1919,9 @@ namespace project1_mod1_outwindow
             chart14.ChartAreas[0].AxisX.Title = "M";
             chart14.ChartAreas[0].AxisX.TitleFont = labelFont;
 
+            double axisYMax = Math.Max(w1[w1.Count - 1], w2[w2.Count - 1]);
             chart14.ChartAreas[0].AxisY.Minimum = w1[0];
-            chart14.ChartAreas[0].AxisY.Maximum = (int)((w1[w1.Count - 1] + w1[w1.Count - 1] * 0.1) / 10) * 10;
+            chart14.ChartAreas[0].AxisY.Maximum = (int)((axisYMax + axisYMax * 0.1) / 10) * 10;
             chart14.ChartAreas[0].AxisY.LabelStyle.Interval = 20;
             chart14.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
             chart14.ChartAreas[0].AxisY.Title = "Mass ton";
@@ -1654,8 +1977,9 @@ namespace project1_mod1_outwindow
             }
             w3.Insert(0, M_MO_W / 1000);
 
+            double maxW = Math.Max(w1[0], w2[0]);
             M_MO_m.Add(M_MO_m[0]);
-            M_MO_w.Add(w1[0]);
+            M_MO_w.Add(maxW);
 
             chart14.Series[1].Points.DataBindXY(ubo_m1, w1);
             chart14.Series[3].Points.DataBindXY(ubo_m2, w2);
@@ -1670,7 +1994,7 @@ namespace project1_mod1_outwindow
             chart14.Series[0].IsVisibleInLegend = true;
             chart14.Series[0].LegendText = "FL330";
             chart14.Series[1].IsVisibleInLegend = true;
-            chart14.Series[1].LegendText = "FL350";
+            chart14.Series[1].LegendText = $"h = {h_middle} ft";
             chart14.Series[2].IsVisibleInLegend = true;
             chart14.Series[2].LegendText = "FL370";
         }
@@ -1754,14 +2078,32 @@ namespace project1_mod1_outwindow
             return roots;
         }
 
+        double mFlightEnvelope;
         public double GetRedundantT(string fileName, double h, double CAS)
         {
             Aircraft A306 = new Aircraft(fileName);
             return A306.Get_T_max_cruise(h, Units.kt2mps(CAS)) - A306.Get_T(h,
-                Units.kt2mps(CAS), Aircraft.FlightPhase.Cruise);
+                Units.kt2mps(CAS), Aircraft.FlightPhase.Cruise, m: mFlightEnvelope);
         }
-        
+
+        double flightEnvelopeMinimumW;
+        public double GetFlightEnvelopeMinimumW(double minimumh)
+        {
+            double W;
+            for(W = A306.m_ref; ; W -= 100)
+            {
+                double v_stall_CAS = A306.Get_v_stall(minimumh, Aircraft.FlightPhase.Cruise, m: W);
+                double v_stall_TAS = AtmosphereEnviroment.Get_TAS(minimumh, Units.kt2mps(v_stall_CAS));
+                double M = A306.Get_Low_Buffet_M(minimumh, m: W, factor: 0.98);
+                double v_lbo = M * AtmosphereEnviroment.Get_a(minimumh);
+                if (v_lbo <= v_stall_TAS) break;
+            }
+            return W;
+        }
+
+
         // 飞行包线（未剪切）
+        bool isClickedflightenvelope = false;
         private void button24_Click(object sender, EventArgs e)
         {
             foreach (var series in chart15.Series)
@@ -1778,11 +2120,33 @@ namespace project1_mod1_outwindow
             List<double> v_max_t = new List<double>();
 
 
+            double m = A306.m_ref;
+            if (isClickedflightenvelope == false || textBox5.Text == "")
+            {
+                isClickedflightenvelope = true;
+                textBox5.ReadOnly = false;
+
+                flightEnvelopeMinimumW = GetFlightEnvelopeMinimumW(15000);
+            }
+            else if (Regex.IsMatch(textBox5.Text, @"^[\d]{1,6}$"))
+            {
+                if (double.Parse(textBox5.Text) < flightEnvelopeMinimumW)
+                    m = flightEnvelopeMinimumW;
+                else if (double.Parse(textBox5.Text) > A306.m_max)
+                    m = A306.m_max;
+                else
+                    m = double.Parse(textBox5.Text);
+            }
+            textBox5.Text = m.ToString();
+
+
+            mFlightEnvelope = m;
+
             double initialh = 0;
             for (double h = 15000; ; h++)
             {
-                double v_stall = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
-                double t = A306.Get_T(h, Units.kt2mps(v_stall), Aircraft.FlightPhase.Cruise);
+                double v_stall = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise, m: m);
+                double t = A306.Get_T(h, Units.kt2mps(v_stall), Aircraft.FlightPhase.Cruise, m: m);
                 double t_max = A306.Get_T_max_cruise(h, Units.kt2mps(v_stall));
                 if (t_max < t)
                 {
@@ -1801,14 +2165,14 @@ namespace project1_mod1_outwindow
 
             for (double h = 32000; ; h++)
             {
-                double v_stall = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
+                double v_stall = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise, m: m);
                 double tmax = A306.Get_T_max_cruise(h, Units.kt2mps(v_stall));
 
                 for (double CAS = v_stall; ; CAS++)
                 {
                     v_CAS.Add(CAS);
 
-                    double t = A306.Get_T(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Cruise);
+                    double t = A306.Get_T(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Cruise, m: m);
                     thrust.Add(t);
 
                     if (thrust.Count > 0 && t > thrust.Min())
@@ -1829,10 +2193,10 @@ namespace project1_mod1_outwindow
             for (double h = 15000; h < initialh; h += 1000)
             {
                 altitude_stall.Add(h);
-                vStall.Add(AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise))));
+                vStall.Add(AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise, m: m))));
             }
             altitude_stall.Add(initialh);
-            vStall.Add(AtmosphereEnviroment.Get_TAS(initialh, Units.kt2mps(A306.Get_v_stall(initialh, Aircraft.FlightPhase.Cruise))));
+            vStall.Add(AtmosphereEnviroment.Get_TAS(initialh, Units.kt2mps(A306.Get_v_stall(initialh, Aircraft.FlightPhase.Cruise, m: m))));
 
 
             for (double h = 15000; h <= h_ceiling_boundary; h += 1000)
@@ -1844,7 +2208,7 @@ namespace project1_mod1_outwindow
                 if (h >= initialh)
                     altitude_v_min_t.Add(h);
 
-                double lowerBoundary = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
+                double lowerBoundary = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise, m: m);
                 double upperBoundary = 600;
                 double step = 1;
                 const double EPS = 1;
@@ -1893,14 +2257,14 @@ namespace project1_mod1_outwindow
             for (double h = 15000; h <= h_ceiling_boundary; h += 1000)
             {
                 altitude_v_lbo.Add(h);
-                double M = A306.Get_Low_Buffet_M(h, factor: 0.98);
+                double M = A306.Get_Low_Buffet_M(h, m: m, factor: 0.98);
                 v_buffet.Add(M * AtmosphereEnviroment.Get_a(h));
             }
 
 
 
             double h_ceiling_middle = h_ceiling_boundary / 2 + h_ceiling / 2;
-            List<double> h_ceiling_middleVRoots = BisectionRootsCalculation(A306.Get_v_stall(h_ceiling_middle, Aircraft.FlightPhase.Cruise), 600, 1, 1, GetRedundantT, fileName, h_ceiling_middle, 2);
+            List<double> h_ceiling_middleVRoots = BisectionRootsCalculation(A306.Get_v_stall(h_ceiling_middle, Aircraft.FlightPhase.Cruise, m: m), 600, 1, 1, GetRedundantT, fileName, h_ceiling_middle, 2);
             if (h_ceiling_middleVRoots.Count >= 2)
             {
                 altitude.Add(h_ceiling_middle);
@@ -1983,7 +2347,7 @@ namespace project1_mod1_outwindow
                 altitude_v_ubo.Add(h);
 
                 double v_UBO = Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h,
-                    A306.m_ref) * AtmosphereEnviroment.Get_a(h);
+                    m) * AtmosphereEnviroment.Get_a(h);
                 v_ubo.Add(v_UBO);
             }
 
@@ -2057,7 +2421,7 @@ namespace project1_mod1_outwindow
 
             chart15.Legends[0].Enabled = true;
             chart15.Legends[0].Font = legendFont;
-            chart15.Legends[0].Position = new System.Windows.Forms.DataVisualization.Charting.ElementPosition(34, 36, 25, 40);
+            chart15.Legends[0].Position = new System.Windows.Forms.DataVisualization.Charting.ElementPosition(36, 38, 24, 37);
             foreach (var series in chart15.Series)
                 series.IsVisibleInLegend = false;
             chart15.Series[0].IsVisibleInLegend = true;
@@ -2092,12 +2456,33 @@ namespace project1_mod1_outwindow
             List<double> altitude = new List<double>();
             List<double> v_max_t = new List<double>();
 
+            double m = A306.m_ref;
+            if (isClickedflightenvelope == false || textBox5.Text == "")
+            {
+                isClickedflightenvelope = true;
+                textBox5.ReadOnly = false;
+
+                flightEnvelopeMinimumW = GetFlightEnvelopeMinimumW(15000);
+            }
+            else if (Regex.IsMatch(textBox5.Text, @"^[\d]{1,6}$"))
+            {
+                if (double.Parse(textBox5.Text) < flightEnvelopeMinimumW)
+                    m = flightEnvelopeMinimumW;
+                else if (double.Parse(textBox5.Text) > A306.m_max)
+                    m = A306.m_max;
+                else
+                    m = double.Parse(textBox5.Text);
+            }
+            textBox5.Text = m.ToString();
+
+            mFlightEnvelope = m;
+
 
             double initialh = 0;
             for (double h = 15000; ; h++)
             {
-                double v_stall = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
-                double t = A306.Get_T(h, Units.kt2mps(v_stall), Aircraft.FlightPhase.Cruise);
+                double v_stall = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise, m: m);
+                double t = A306.Get_T(h, Units.kt2mps(v_stall), Aircraft.FlightPhase.Cruise, m: m);
                 double t_max = A306.Get_T_max_cruise(h, Units.kt2mps(v_stall));
                 if (t_max < t)
                 {
@@ -2116,14 +2501,14 @@ namespace project1_mod1_outwindow
 
             for (double h = 32000; ; h++)
             {
-                double v_stall = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
+                double v_stall = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise, m: m);
                 double tmax = A306.Get_T_max_cruise(h, Units.kt2mps(v_stall));
 
                 for (double CAS = v_stall; ; CAS++)
                 {
                     v_CAS.Add(CAS);
 
-                    double t = A306.Get_T(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Cruise);
+                    double t = A306.Get_T(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Cruise, m: m);
                     thrust.Add(t);
 
                     if (thrust.Count > 0 && t > thrust.Min())
@@ -2145,10 +2530,10 @@ namespace project1_mod1_outwindow
             for (double h = 15000; h < initialh; h += 1000)
             {
                 altitude_stall.Add(h);
-                vStall.Add(AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise))));
+                vStall.Add(AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise, m: m))));
             }
             altitude_stall.Add(initialh);
-            vStall.Add(AtmosphereEnviroment.Get_TAS(initialh, Units.kt2mps(A306.Get_v_stall(initialh, Aircraft.FlightPhase.Cruise))));
+            vStall.Add(AtmosphereEnviroment.Get_TAS(initialh, Units.kt2mps(A306.Get_v_stall(initialh, Aircraft.FlightPhase.Cruise, m: m))));
 
 
             for (double h = 15000; h <= h_ceiling_boundary; h += 1000)
@@ -2162,7 +2547,7 @@ namespace project1_mod1_outwindow
                 if (h >= initialh)
                     altitude_v_min_t.Add(h);
 
-                double lowerBoundary = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
+                double lowerBoundary = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise, m: m);
                 double upperBoundary = 600;
                 double step = 1;
                 const double EPS = 1;
@@ -2211,14 +2596,14 @@ namespace project1_mod1_outwindow
             for (double h = 15000; h <= h_ceiling_boundary; h += 1000)
             {
                 altitude_v_min.Add(h);
-                double M = A306.Get_Low_Buffet_M(h, factor: 0.98);
+                double M = A306.Get_Low_Buffet_M(h, m: m, factor: 0.98);
                 v_buffet.Add(M * AtmosphereEnviroment.Get_a(h));
             }
 
 
 
             double h_ceiling_middle = h_ceiling_boundary / 2 + h_ceiling / 2;
-            List<double> h_ceiling_middleVRoots = BisectionRootsCalculation(A306.Get_v_stall(h_ceiling_middle, Aircraft.FlightPhase.Cruise), 600, 1, 1, GetRedundantT, fileName, h_ceiling_middle, 2);
+            List<double> h_ceiling_middleVRoots = BisectionRootsCalculation(A306.Get_v_stall(h_ceiling_middle, Aircraft.FlightPhase.Cruise, m: m), 600, 1, 1, GetRedundantT, fileName, h_ceiling_middle, 2);
             if (h_ceiling_middleVRoots.Count >= 2)
             {
                 altitude.Add(h_ceiling_middle);
@@ -2309,7 +2694,7 @@ namespace project1_mod1_outwindow
                 altitude_v_ubo.Add(h);
 
                 double v_UBO = Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h,
-                    A306.m_ref) * AtmosphereEnviroment.Get_a(h);
+                    m) * AtmosphereEnviroment.Get_a(h);
                 v_ubo.Add(v_UBO);
             }
 
@@ -2317,7 +2702,7 @@ namespace project1_mod1_outwindow
             bool vBuffetWrapVStallFlag = true;
             if (v_buffet.Count >= vStall.Count)
                 for (int i = 0; i < vStall.Count; i++)
-                    if (vStall[i] > v_buffet[i])
+                    if (vStall[i] - v_buffet[i] > 0.2)
                     {
                         vBuffetWrapVStallFlag = false;
                         break;
@@ -2435,15 +2820,23 @@ namespace project1_mod1_outwindow
             v_XAxis_max.Add(v_M_MO.Max());
 
 
-            chart15.ChartAreas[0].AxisX.Minimum = (int)(vStall[0] - vStall[0] * 0.005);
+            chart15.ChartAreas[0].AxisX.Minimum = (int)(vStall[0] - vStall[0] * 0.05);
             chart15.ChartAreas[0].AxisX.Maximum = (int)(v_XAxis_max.Max() + v_XAxis_max.Max() * 0.1);
             chart15.ChartAreas[0].AxisX.LabelStyle.Interval = 50;
             chart15.ChartAreas[0].AxisX.LabelStyle.Font = axisFont;
             chart15.ChartAreas[0].AxisX.Title = "TAS kt";
             chart15.ChartAreas[0].AxisX.TitleFont = labelFont;
 
+            List<double> axisYMax = new List<double>();
+            axisYMax.Add(altitude_v_min_t.Max());
+            axisYMax.Add(altitude_v_min.Max());
+            axisYMax.Add(altitude.Max());
+            axisYMax.Add(altitude_M_MO.Max());
+            if(altitude_v_ubo.Count > 0)
+                axisYMax.Add(altitude_v_ubo.Max());
+            
             chart15.ChartAreas[0].AxisY.Minimum = 150;
-            chart15.ChartAreas[0].AxisY.Maximum = 410;
+            chart15.ChartAreas[0].AxisY.Maximum = axisYMax.Max() * 1.02;
             chart15.ChartAreas[0].AxisY.LabelStyle.Interval = 20;
             chart15.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
             chart15.ChartAreas[0].AxisY.Title = "Altitude 100 ft";
@@ -2461,7 +2854,7 @@ namespace project1_mod1_outwindow
 
             chart15.Legends[0].Enabled = true;
             chart15.Legends[0].Font = legendFont;
-            chart15.Legends[0].Position = new System.Windows.Forms.DataVisualization.Charting.ElementPosition(42, 36, 25, 30);
+            chart15.Legends[0].Position = new System.Windows.Forms.DataVisualization.Charting.ElementPosition(12, 0, 24, 30);
             foreach (var series in chart15.Series)
                 series.IsVisibleInLegend = false;
             if(v_min_t.Count > 1)
@@ -2599,6 +2992,7 @@ namespace project1_mod1_outwindow
         }
 
         // 爬升梯度随速度
+        bool isClickedcg = false;
         private void button27_Click(object sender, EventArgs e)
         {
             List<double> cg = new List<double>();
@@ -2607,6 +3001,20 @@ namespace project1_mod1_outwindow
 
             double W = A306.m_ref * AtmosphereEnviroment.g;
             double h = 18000;
+
+            if (isClickedcg == false || textBox18.Text == "")
+            {
+                isClickedcg = true;
+                textBox18.ReadOnly = false;
+            }
+            else if (Regex.IsMatch(textBox18.Text, @"^[\d]{1,5}$"))
+            {
+                if (double.Parse(textBox18.Text) > ((int)A306.h_MO / 10000) * 10000)
+                    h = ((int)A306.h_MO / 10000) * 10000;
+                else
+                    h = double.Parse(textBox18.Text);
+            }
+            textBox18.Text = h.ToString();
 
 
             double initialCAS = 0;
@@ -2662,6 +3070,8 @@ namespace project1_mod1_outwindow
 
             chart17.ChartAreas[0].AxisY.Minimum = 0;
             chart17.ChartAreas[0].AxisY.LabelStyle.Interval = 0.01;
+            if (cg.Max() <= chart17.ChartAreas[0].AxisY.LabelStyle.Interval)
+                chart17.ChartAreas[0].AxisY.LabelStyle.Interval = (int)(cg.Max() / 10 * 100) / 100;
             chart17.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
             chart17.ChartAreas[0].AxisY.Title = "Climb Gradient %";
             chart17.ChartAreas[0].AxisY.TitleFont = labelFont;
@@ -2670,6 +3080,7 @@ namespace project1_mod1_outwindow
         }
 
         // 爬升率随速度
+        bool isClickedroc = false;
         private void button28_Click(object sender, EventArgs e)
         {
             List<double> rocd = new List<double>();
@@ -2678,6 +3089,20 @@ namespace project1_mod1_outwindow
 
 
             double h = 18000;
+
+            if (isClickedroc == false || textBox19.Text == "")
+            {
+                isClickedroc = true;
+                textBox19.ReadOnly = false;
+            }
+            else if (Regex.IsMatch(textBox19.Text, @"^[\d]{1,5}$"))
+            {
+                if (double.Parse(textBox19.Text) > ((int)A306.h_MO / 10000) * 10000)
+                    h = ((int)A306.h_MO / 10000) * 10000;
+                else
+                    h = double.Parse(textBox19.Text);
+            }
+            textBox19.Text = h.ToString();
 
 
             double initialCAS = 0;
@@ -2722,6 +3147,8 @@ namespace project1_mod1_outwindow
 
             chart18.ChartAreas[0].AxisY.Minimum = 0;
             chart18.ChartAreas[0].AxisY.LabelStyle.Interval = 300;
+            if (rocd.Max() <= chart18.ChartAreas[0].AxisY.LabelStyle.Interval)
+                chart18.ChartAreas[0].AxisY.LabelStyle.Interval = (int)(rocd.Max() / 10);
             chart18.ChartAreas[0].AxisY.LabelStyle.Font = axisFont;
             chart18.ChartAreas[0].AxisY.Title = "Rate of Climb ft/min";
             chart18.ChartAreas[0].AxisY.TitleFont = labelFont;
@@ -2826,6 +3253,7 @@ namespace project1_mod1_outwindow
         }
 
         // 燃油里程随马赫数与巡航方式
+        bool isClickedcruisetype = false;
         private void button30_Click(object sender, EventArgs e)
         {
             List<double> m = new List<double>();
@@ -2836,6 +3264,29 @@ namespace project1_mod1_outwindow
 
             double h = 33000;
 
+            double m_high = A306.m_ref - (A306.m_ref - A306.m_min) * 0.5;
+            double m_middle = A306.m_ref - (A306.m_ref - A306.m_min) * 0.7;
+
+            if (isClickedcruisetype == false || textBox23.Text == "")
+            {
+                isClickedcruisetype = true;
+                textBox23.ReadOnly = false;
+            }
+            else if (Regex.IsMatch(textBox23.Text, @"^[\d]{1,6}$"))
+            {
+                if (double.Parse(textBox23.Text) < A306.m_min)
+                    m_middle = A306.m_min;
+                else if(double.Parse(textBox23.Text) > A306.m_max)
+                    m_middle = A306.m_max;
+                else
+                    m_middle = double.Parse(textBox23.Text);
+            }
+            textBox23.Text = m_middle.ToString();
+
+
+            double m_low = A306.m_ref - (A306.m_ref - A306.m_min) * 0.9;
+
+
             for (double CAS = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise); CAS <= 500; CAS++)
             {
                 double TAS = AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(CAS));
@@ -2844,19 +3295,19 @@ namespace project1_mod1_outwindow
 
                 m.Add(M);
 
-                double ff = A306.Get_ff(Aircraft.FlightPhase.Cruise, m: A306.m_ref - (A306.m_ref - A306.m_min) * 0.5, h: h, CAS: Units.kt2mps(CAS));
+                double ff = A306.Get_ff(Aircraft.FlightPhase.Cruise, m: m_high, h: h, CAS: Units.kt2mps(CAS));
                 ff /= 60;
 
                 double SR = TAS / ff;
                 sr.Add(SR);
 
-                ff = A306.Get_ff(Aircraft.FlightPhase.Cruise, m: A306.m_ref - (A306.m_ref - A306.m_min) * 0.7, h: h, CAS: Units.kt2mps(CAS));
+                ff = A306.Get_ff(Aircraft.FlightPhase.Cruise, m: m_middle, h: h, CAS: Units.kt2mps(CAS));
                 ff /= 60;
 
                 SR = TAS / ff;
                 sr1.Add(SR);
 
-                ff = A306.Get_ff(Aircraft.FlightPhase.Cruise, m: A306.m_ref - (A306.m_ref - A306.m_min) * 0.9, h: h, CAS: Units.kt2mps(CAS));
+                ff = A306.Get_ff(Aircraft.FlightPhase.Cruise, m: m_low, h: h, CAS: Units.kt2mps(CAS));
                 ff /= 60;
 
                 SR = TAS / ff;
@@ -2869,11 +3320,29 @@ namespace project1_mod1_outwindow
             int index_sr1_max = sr1.IndexOf(sr1.Max());
             int index_sr2_max = sr2.IndexOf(sr2.Max());
 
-            List<double> v_sr_max = new List<double>() { m[index_sr_max], m[index_sr1_max], m[index_sr2_max] };
-            List<double> sr_max = new List<double>() { sr[index_sr_max], sr1[index_sr1_max], sr2[index_sr2_max] };
 
 
+            List<double> v_sr_max;
+            List<double> sr_max;
 
+            if (sr1[index_sr1_max] <= sr[index_sr_max])
+            {
+                v_sr_max = new List<double>() { m[index_sr1_max], m[index_sr_max], m[index_sr2_max] };
+                sr_max = new List<double>() { sr1[index_sr1_max], sr[index_sr_max], sr2[index_sr2_max] };
+            }
+            else if(sr1[index_sr1_max] >= sr2[index_sr2_max])
+            {
+                v_sr_max = new List<double>() { m[index_sr_max], m[index_sr2_max], m[index_sr1_max] };
+                sr_max = new List<double>() { sr[index_sr_max], sr2[index_sr2_max], sr1[index_sr1_max] };
+            }
+            else
+            {
+                v_sr_max = new List<double>() { m[index_sr_max], m[index_sr1_max], m[index_sr2_max] };
+                sr_max = new List<double>() { sr[index_sr_max], sr1[index_sr1_max], sr2[index_sr2_max] };
+            }
+
+
+            
 
             int index_sr_99max = index_sr_max;
             for (int i = index_sr_max; i < sr.Count; i++)
@@ -2902,14 +3371,36 @@ namespace project1_mod1_outwindow
 
 
 
-            List<double> v_sr_99max = new List<double>() { m[index_sr_99max], m[index_sr1_99max], m[index_sr2_99max] };
-            List<double> sr_99max = new List<double>() { sr[index_sr_99max], sr1[index_sr1_99max], sr2[index_sr2_99max] };
+            List<double> v_sr_99max;
+            List<double> sr_99max;
+
+            if(sr1[index_sr1_99max] <= sr[index_sr_99max])
+            {
+                v_sr_99max = new List<double>() { m[index_sr1_99max], m[index_sr_99max], m[index_sr2_99max] };
+                sr_99max = new List<double>() { sr1[index_sr1_99max], sr[index_sr_99max], sr2[index_sr2_99max] };
+            }
+            else if(sr1[index_sr1_99max] >= sr2[index_sr2_99max])
+            {
+                v_sr_99max = new List<double>() { m[index_sr_99max], m[index_sr2_99max], m[index_sr1_99max] };
+                sr_99max = new List<double>() { sr[index_sr_99max], sr2[index_sr2_99max], sr1[index_sr1_99max] };
+            }
+            else
+            {
+                v_sr_99max = new List<double>() { m[index_sr_99max], m[index_sr1_99max], m[index_sr2_99max] };
+                sr_99max = new List<double>() { sr[index_sr_99max], sr1[index_sr1_99max], sr2[index_sr2_99max] };
+            }
 
 
+            int indexMaximumM = m.IndexOf(Math.Max(m[index_sr_99max], m[index_sr1_99max]));
+            List<double> v_constM = new List<double>() { m[indexMaximumM], m[indexMaximumM], m[indexMaximumM], m[indexMaximumM] };
+            List<double> sr_constM;
+            if(sr1[indexMaximumM] <= sr[indexMaximumM])
+                sr_constM = new List<double>() { sr1[indexMaximumM], sr[indexMaximumM], sr2[indexMaximumM], sr2[indexMaximumM] * 1.05 };
+            else if(sr1[indexMaximumM] >= sr2[indexMaximumM])
+                sr_constM = new List<double>() { sr[indexMaximumM], sr2[indexMaximumM], sr1[indexMaximumM], sr1[indexMaximumM] * 1.05 };
+            else
+                sr_constM = new List<double>() { sr[indexMaximumM], sr1[indexMaximumM], sr2[indexMaximumM], sr2[indexMaximumM] * 1.05 };
 
-
-            List<double> v_constM = new List<double>() { m[index_sr_99max], m[index_sr_99max], m[index_sr_99max], m[index_sr_99max] };
-            List<double> sr_constM = new List<double>() { sr[index_sr_99max], sr1[index_sr_99max], sr2[index_sr_99max], sr2[index_sr_99max] * 1.05 };
 
             chart19.ChartAreas[0].AxisX.Minimum = (int)((m[0] - m[0] * 0.01) * 10) / 10.0;
             chart19.ChartAreas[0].AxisX.LabelStyle.Interval = 0.1;
@@ -2931,15 +3422,15 @@ namespace project1_mod1_outwindow
 
             chart19.Legends[0].Enabled = true;
             chart19.Legends[0].Font = legendFont;
-            chart19.Legends[0].Position = new System.Windows.Forms.DataVisualization.Charting.ElementPosition(70, 45, 30, 34);
+            chart19.Legends[0].Position = new System.Windows.Forms.DataVisualization.Charting.ElementPosition(78, 45, 18, 34);
             foreach (var series in chart19.Series)
                 series.IsVisibleInLegend = false;
             chart19.Series[0].IsVisibleInLegend = true;
-            chart19.Series[0].LegendText = "m_ref - 0.5 (m_ref - m_min)";
+            chart19.Series[0].LegendText = $"m = {m_high} kg";
             chart19.Series[1].IsVisibleInLegend = true;
-            chart19.Series[1].LegendText = "m_ref - 0.7 (m_ref - m_min)";
+            chart19.Series[1].LegendText = $"m = {m_middle} kg";
             chart19.Series[2].IsVisibleInLegend = true;
-            chart19.Series[2].LegendText = "m_ref - 0.9 (m_ref - m_min)";
+            chart19.Series[2].LegendText = $"m = {m_low} kg";
             chart19.Series[4].IsVisibleInLegend = true;
             chart19.Series[4].LegendText = "MRC";
             chart19.Series[5].IsVisibleInLegend = true;
@@ -2949,12 +3440,61 @@ namespace project1_mod1_outwindow
         }
 
         // 燃油里程与高度：最佳巡航高度
+        bool isClickedoptimalaltitude = false;
+        double mCurved;
         private void button31_Click(object sender, EventArgs e)
         {
             List<double> h = new List<double>();
             List<double> sr = new List<double>();
             List<double> sr1 = new List<double>();
             List<double> sr2 = new List<double>();
+
+            double m_high = A306.m_max - (A306.m_max - A306.m_ref) * 0.6;
+            double m_middle = A306.m_max - (A306.m_max - A306.m_ref) * 0.8;
+
+            
+
+            if (isClickedoptimalaltitude == false || textBox24.Text == "")
+            {
+                isClickedoptimalaltitude = true;
+                textBox24.ReadOnly = false;
+
+                for (mCurved = A306.m_min; ; mCurved += 10)
+                {
+                    bool findmCurved = false;
+                    double lastSR = A306.Get_ff(Aircraft.FlightPhase.Cruise, m: mCurved, h: 30000, CAS: AtmosphereEnviroment.Get_CAS(30000, A306.M_MO * AtmosphereEnviroment.Get_a(30000)));
+                    for (double alt = 30000; alt <= 43000; alt += 1000)
+                    {
+                        double TAS = A306.M_MO * AtmosphereEnviroment.Get_a(alt);
+                        double CAS = AtmosphereEnviroment.Get_CAS(alt, TAS);
+                        double ff = A306.Get_ff(Aircraft.FlightPhase.Cruise, m: mCurved, h: alt, CAS: CAS);
+                        ff /= 60;
+                        double SR = TAS / ff;
+                        if (SR < lastSR)
+                        {
+                            findmCurved = true;
+                            break;
+                        }
+                        else
+                            lastSR = SR;
+                    }
+                    if (findmCurved)
+                        break;
+                }
+            }
+            else if (Regex.IsMatch(textBox24.Text, @"^[\d]{1,6}$"))
+            {
+                if (double.Parse(textBox24.Text) < mCurved)
+                    m_middle = mCurved;
+                else if (double.Parse(textBox24.Text) > A306.m_max)
+                    m_middle = A306.m_max;
+                else
+                    m_middle = double.Parse(textBox24.Text);
+            }
+            textBox24.Text = m_middle.ToString();
+
+
+            double m_low = A306.m_ref;
 
 
             for (double alt = 30000; alt <= 43000; alt += 1000)
@@ -2965,12 +3505,12 @@ namespace project1_mod1_outwindow
                 double CAS = AtmosphereEnviroment.Get_CAS(alt, TAS);
 
 
-                double ff = A306.Get_ff(Aircraft.FlightPhase.Cruise, m: A306.m_max - (A306.m_max - A306.m_ref) * 0.6, h: alt, CAS: CAS);
+                double ff = A306.Get_ff(Aircraft.FlightPhase.Cruise, m: m_high, h: alt, CAS: CAS);
                 ff /= 60;
                 double SR = TAS / ff;
                 sr.Add(SR);
 
-                ff = A306.Get_ff(Aircraft.FlightPhase.Cruise, m: A306.m_max - (A306.m_max - A306.m_ref) * 0.8, h: alt, CAS: CAS);
+                ff = A306.Get_ff(Aircraft.FlightPhase.Cruise, m: m_middle, h: alt, CAS: CAS);
                 ff /= 60;
                 SR = TAS / ff;
                 sr1.Add(SR);
@@ -2982,12 +3522,30 @@ namespace project1_mod1_outwindow
             }
 
 
-            List<double> sr_sr_max = new List<double>() { sr.Max(), sr1.Max(), sr2.Max() };
-            List<double> h_sr_max = new List<double>() { h[sr.IndexOf(sr.Max())], h[sr1.IndexOf(sr1.Max())], h[sr2.IndexOf(sr2.Max())] };
+            List<double> sr_sr_max;
+            List<double> h_sr_max;
+            if(h[sr1.IndexOf(sr1.Max())] <= h[sr.IndexOf(sr.Max())])
+            {
+                sr_sr_max = new List<double>() { sr1.Max(), sr.Max(), sr2.Max() };
+                h_sr_max = new List<double>() { h[sr1.IndexOf(sr1.Max())], h[sr.IndexOf(sr.Max())], h[sr2.IndexOf(sr2.Max())] };
+            }
+            else if(h[sr1.IndexOf(sr1.Max())] >= h[sr2.IndexOf(sr2.Max())])
+            {
+                sr_sr_max = new List<double>() { sr.Max(), sr2.Max(), sr1.Max() };
+                h_sr_max = new List<double>() { h[sr.IndexOf(sr.Max())], h[sr2.IndexOf(sr2.Max())], h[sr1.IndexOf(sr1.Max())] };
+            }
+            else
+            {
+                sr_sr_max = new List<double>() { sr.Max(), sr1.Max(), sr2.Max() };
+                h_sr_max = new List<double>() { h[sr.IndexOf(sr.Max())], h[sr1.IndexOf(sr1.Max())], h[sr2.IndexOf(sr2.Max())] };
+            }
 
 
-            chart20.ChartAreas[0].AxisX.Minimum = (int)(sr[0] - sr[0] * 0.02);
-            chart20.ChartAreas[0].AxisX.Maximum = (int)(sr2[sr.Count - 1] + sr2[sr.Count - 1] * 0.05);
+
+            double axisXMinimum = Math.Min(sr[0], sr1.Min());
+            double axisXMaximum = Math.Max(sr1[sr.Count - 1], sr2[sr.Count - 1]);
+            chart20.ChartAreas[0].AxisX.Minimum = (int)(axisXMinimum - axisXMinimum * 0.02);
+            chart20.ChartAreas[0].AxisX.Maximum = (int)(axisXMaximum + axisXMaximum * 0.05);
             chart20.ChartAreas[0].AxisX.LabelStyle.Interval = 5;
             chart20.ChartAreas[0].AxisX.LabelStyle.Font = axisFont;
             chart20.ChartAreas[0].AxisX.Title = "SR m/kg";
@@ -3007,15 +3565,15 @@ namespace project1_mod1_outwindow
 
             chart20.Legends[0].Enabled = true;
             chart20.Legends[0].Font = legendFont;
-            chart20.Legends[0].Position = new System.Windows.Forms.DataVisualization.Charting.ElementPosition(70, 55, 30, 22);
+            chart20.Legends[0].Position = new System.Windows.Forms.DataVisualization.Charting.ElementPosition(78, 55, 18, 22);
             foreach (var series in chart20.Series)
                 series.IsVisibleInLegend = false;
             chart20.Series[0].IsVisibleInLegend = true;
-            chart20.Series[0].LegendText = "m_ref + 0.4 (m_max - m_ref)";
+            chart20.Series[0].LegendText = $"m = {m_high} kg";
             chart20.Series[1].IsVisibleInLegend = true;
-            chart20.Series[1].LegendText = "m_ref + 0.2 (m_max - m_ref)";
+            chart20.Series[1].LegendText = $"m = {m_middle} kg";
             chart20.Series[2].IsVisibleInLegend = true;
-            chart20.Series[2].LegendText = "m_ref";
+            chart20.Series[2].LegendText = $"m = {m_low} kg";
             chart20.Series[4].IsVisibleInLegend = true;
             chart20.Series[4].LegendText = "Optimal altitude";
         }
@@ -3091,6 +3649,7 @@ namespace project1_mod1_outwindow
         }
 
         // 下降梯度图及飘降速度
+        bool isClickeddg = false;
         private void button33_Click(object sender, EventArgs e)
         {
             List<double> tas = new List<double>();
@@ -3098,6 +3657,22 @@ namespace project1_mod1_outwindow
 
             double W = A306.m_ref * AtmosphereEnviroment.g;
             double h = 18000;
+
+            if (isClickeddg == false || textBox20.Text == "")
+            {
+                isClickeddg = true;
+                textBox20.ReadOnly = false;
+            }
+            else if (Regex.IsMatch(textBox20.Text, @"^[\d]{1,5}$"))
+            {
+                if (double.Parse(textBox20.Text) > A306.h_MO)
+                    h = A306.h_MO;
+                else
+                    h = double.Parse(textBox20.Text);
+            }
+            textBox20.Text = h.ToString();
+
+
 
             for (double CAS = A306.Get_v_stall(h, Aircraft.FlightPhase.Descent); CAS <= 600; CAS++)
             {
@@ -3135,6 +3710,7 @@ namespace project1_mod1_outwindow
         }
 
         // 下降率图及飘降速度
+        bool isClickedrod = false;
         private void button34_Click(object sender, EventArgs e)
         {
             List<double> tas = new List<double>();
@@ -3142,6 +3718,21 @@ namespace project1_mod1_outwindow
             List<double> slope = new List<double>();
 
             double h = 18000;
+
+            if (isClickedrod == false || textBox21.Text == "")
+            {
+                isClickedrod = true;
+                textBox21.ReadOnly = false;
+            }
+            else if (Regex.IsMatch(textBox21.Text, @"^[\d]{1,5}$"))
+            {
+                if (double.Parse(textBox21.Text) > A306.h_MO)
+                    h = A306.h_MO;
+                else
+                    h = double.Parse(textBox21.Text);
+            }
+            textBox21.Text = h.ToString();
+
 
             for (double CAS = A306.Get_v_stall(h, Aircraft.FlightPhase.Descent) * 0.5; CAS <= 600; CAS++)
             {
