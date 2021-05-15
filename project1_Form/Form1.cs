@@ -220,8 +220,6 @@ namespace project1_mod1_outwindow
             chart2.Series[1].LegendText = "Parasite drag";
             chart2.Series[2].IsVisibleInLegend = true;
             chart2.Series[2].LegendText = "Induced drag";
-
-            this.Text = h.ToString();
         }
 
         // 所需推力随重量
