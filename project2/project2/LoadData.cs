@@ -655,7 +655,5 @@ namespace project2
             Button[] buttonsAll = { modify1, modify2, modify3, modify4, loadFile };
             SetButtonsFocus(buttonsAll);
         }
-
-
     }
 }

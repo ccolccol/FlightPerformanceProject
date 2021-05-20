@@ -9,8 +9,10 @@ using System.Text.RegularExpressions;
 
 namespace project1
 {
-    public partial class Form1 : Form
+    public partial class Platform : Form
     {
+        string aircraftType = "A306";
+
         TabControl[] tabs;
         List<TabControl> movedTabs = new List<TabControl>();
         int currentFrontTabIndex;
@@ -23,15 +25,15 @@ namespace project1
 
         string path;
         string fileName;
-        Aircraft A306;
+        Aircraft aircraft;
 
 
-        public Form1()
+        public Platform()
         {
             InitializeComponent();
         }
 
-        private void Form1_Load(object sender, EventArgs e)
+        private void Platform_Load(object sender, EventArgs e)
         {
             tabs = new TabControl[] { tabControl1, tabControl2, tabControl3, tabControl4, tabControl5, tabControl6, tabControl7 };
             foreach (var tab in tabs)
@@ -44,8 +46,9 @@ namespace project1
 
 
             path = System.Environment.CurrentDirectory;
-            fileName = $@"{path}\A306.txt";
-            A306 = new Aircraft(fileName);
+            fileName = $@"{path}\{aircraftType}.txt";
+            aircraft = new Aircraft(fileName);
+            this.Text = $"{aircraftType}性能工程图集";
 
             axisFont = new System.Drawing.Font("Times New Roman", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             labelFont = new System.Drawing.Font("Times New Roman", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -117,7 +120,7 @@ namespace project1
             for (double C_L = 0; C_L < 2; C_L += 0.01)
             {
                 c_L.Add(C_L);
-                double C_D = A306.C_D0_CR + A306.C_D2_CR * C_L * C_L;
+                double C_D = aircraft.C_D0_CR + aircraft.C_D2_CR * C_L * C_L;
                 c_D.Add(C_D);
                 double K = C_L / C_D;
                 k.Add(K);
@@ -155,10 +158,10 @@ namespace project1
             }
             else if(Regex.IsMatch(textBox4.Text, @"^[\d]{1,5}$"))
             {
-                if (double.Parse(textBox4.Text) <= A306.H_max_AP)
-                    h = A306.H_max_AP + 1;
-                else if (double.Parse(textBox4.Text) > A306.h_MO)
-                    h = A306.h_MO;
+                if (double.Parse(textBox4.Text) <= aircraft.H_max_AP)
+                    h = aircraft.H_max_AP + 1;
+                else if (double.Parse(textBox4.Text) > aircraft.h_MO)
+                    h = aircraft.h_MO;
                 else
                     h = double.Parse(textBox4.Text);
             }
@@ -172,7 +175,7 @@ namespace project1
             List<double> di = new List<double>();
 
             
-            double vmin = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
+            double vmin = aircraft.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
 
             for (double TAS
                 = AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(vmin * 0.9));
@@ -180,9 +183,9 @@ namespace project1
             {
                 tas.Add(TAS);
                 double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
-                double D = A306.Get_D(h, CAS, Aircraft.FlightPhase.Cruise) / 10000;
-                double D0 = 0.5 * A306.C_D0_CR * AtmosphereEnviroment.Get_rho(h) * A306.S * TAS * TAS / 10000;
-                double Di = 2 * A306.C_D2_CR * (A306.m_ref * AtmosphereEnviroment.g) * (A306.m_ref * AtmosphereEnviroment.g) / (AtmosphereEnviroment.Get_rho(h) * A306.S) / (TAS * TAS) / 10000;
+                double D = aircraft.Get_D(h, CAS, Aircraft.FlightPhase.Cruise) / 10000;
+                double D0 = 0.5 * aircraft.C_D0_CR * AtmosphereEnviroment.Get_rho(h) * aircraft.S * TAS * TAS / 10000;
+                double Di = 2 * aircraft.C_D2_CR * (aircraft.m_ref * AtmosphereEnviroment.g) * (aircraft.m_ref * AtmosphereEnviroment.g) / (AtmosphereEnviroment.Get_rho(h) * aircraft.S) / (TAS * TAS) / 10000;
                 d.Add(D);
 
                 d0.Add(D0);
@@ -255,7 +258,7 @@ namespace project1
 
             double h = 18000;
 
-            double vmin = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
+            double vmin = aircraft.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
 
 
             for (double TAS
@@ -264,12 +267,12 @@ namespace project1
             {
                 tas.Add(TAS);
                 double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
-                double T = A306.Get_T(h, CAS, Aircraft.FlightPhase.Cruise) / 1000;
+                double T = aircraft.Get_T(h, CAS, Aircraft.FlightPhase.Cruise) / 1000;
 
                 t.Add(T);
 
-                double T1 = A306.Get_T(h, CAS, Aircraft.FlightPhase.Cruise, m:A306.m_ref * m_refCoefficient) / 1000;
-                double T2 = A306.Get_T(h, CAS, Aircraft.FlightPhase.Cruise, m: A306.m_ref + A306.m_ref * 0.8) / 1000;
+                double T1 = aircraft.Get_T(h, CAS, Aircraft.FlightPhase.Cruise, m:aircraft.m_ref * m_refCoefficient) / 1000;
+                double T2 = aircraft.Get_T(h, CAS, Aircraft.FlightPhase.Cruise, m: aircraft.m_ref + aircraft.m_ref * 0.8) / 1000;
                 t1.Add(T1);
                 t2.Add(T2);
             }
@@ -332,18 +335,18 @@ namespace project1
             {
                 if (double.Parse(textBox6.Text) < 15000)
                     h1 = 15000;
-                else if (double.Parse(textBox6.Text) > A306.h_MO)
-                    h1 = A306.h_MO;
+                else if (double.Parse(textBox6.Text) > aircraft.h_MO)
+                    h1 = aircraft.h_MO;
                 else
                     h1 = double.Parse(textBox6.Text);
             }
             textBox6.Text = h1.ToString();
 
 
-            double vmin = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
+            double vmin = aircraft.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
 
-            double vmin1 = A306.Get_v_stall(h1, Aircraft.FlightPhase.Cruise);
-            double vmin2 = A306.Get_v_stall(h2, Aircraft.FlightPhase.Cruise);
+            double vmin1 = aircraft.Get_v_stall(h1, Aircraft.FlightPhase.Cruise);
+            double vmin2 = aircraft.Get_v_stall(h2, Aircraft.FlightPhase.Cruise);
 
             for (double TAS
                 = AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(vmin));
@@ -351,7 +354,7 @@ namespace project1
             {
                 tas.Add(TAS);
                 double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
-                double T = A306.Get_T(h, CAS, Aircraft.FlightPhase.Cruise) / 10000;
+                double T = aircraft.Get_T(h, CAS, Aircraft.FlightPhase.Cruise) / 10000;
                 t.Add(T);
             }
 
@@ -361,7 +364,7 @@ namespace project1
             {
                 tas1.Add(TAS);
                 double CAS = AtmosphereEnviroment.Get_CAS(h1, TAS);
-                double T = A306.Get_T(h1, CAS, Aircraft.FlightPhase.Cruise) / 10000;
+                double T = aircraft.Get_T(h1, CAS, Aircraft.FlightPhase.Cruise) / 10000;
                 t1.Add(T);
             }
 
@@ -371,7 +374,7 @@ namespace project1
             {
                 tas2.Add(TAS);
                 double CAS = AtmosphereEnviroment.Get_CAS(h2, TAS);
-                double T = A306.Get_T(h2, CAS, Aircraft.FlightPhase.Cruise) / 10000;
+                double T = aircraft.Get_T(h2, CAS, Aircraft.FlightPhase.Cruise) / 10000;
                 t2.Add(T);
             }
 
@@ -438,18 +441,18 @@ namespace project1
             {
                 if (double.Parse(textBox8.Text) < 15000)
                     h1 = 15000;
-                else if (double.Parse(textBox8.Text) > A306.h_MO)
-                    h1 = A306.h_MO;
+                else if (double.Parse(textBox8.Text) > aircraft.h_MO)
+                    h1 = aircraft.h_MO;
                 else
                     h1 = double.Parse(textBox8.Text);
             }
             textBox8.Text = h1.ToString();
 
 
-            double vmin = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
+            double vmin = aircraft.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
 
-            double vmin1 = A306.Get_v_stall(h1, Aircraft.FlightPhase.Cruise);
-            double vmin2 = A306.Get_v_stall(h2, Aircraft.FlightPhase.Cruise);
+            double vmin1 = aircraft.Get_v_stall(h1, Aircraft.FlightPhase.Cruise);
+            double vmin2 = aircraft.Get_v_stall(h2, Aircraft.FlightPhase.Cruise);
 
             for (double TAS
                 = AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(vmin));
@@ -457,7 +460,7 @@ namespace project1
             {
                 tas.Add(TAS);
                 double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
-                double Tmax = A306.Get_T_max_cruise(h, CAS) / 10000;
+                double Tmax = aircraft.Get_T_max_cruise(h, CAS) / 10000;
                 tmax.Add(Tmax);
             }
 
@@ -467,7 +470,7 @@ namespace project1
             {
                 tas1.Add(TAS);
                 double CAS = AtmosphereEnviroment.Get_CAS(h1, TAS);
-                double Tmax = A306.Get_T_max_cruise(h1, CAS) / 10000;
+                double Tmax = aircraft.Get_T_max_cruise(h1, CAS) / 10000;
                 tmax1.Add(Tmax);
             }
 
@@ -477,7 +480,7 @@ namespace project1
             {
                 tas2.Add(TAS);
                 double CAS = AtmosphereEnviroment.Get_CAS(h2, TAS);
-                double Tmax = A306.Get_T_max_cruise(h2, CAS) / 10000;
+                double Tmax = aircraft.Get_T_max_cruise(h2, CAS) / 10000;
                 tmax2.Add(Tmax);
             }
 
@@ -537,15 +540,15 @@ namespace project1
             {
                 if (double.Parse(textBox9.Text) < 15000)
                     h = 15000;
-                else if (double.Parse(textBox9.Text) > A306.h_MO)
-                    h = A306.h_MO;
+                else if (double.Parse(textBox9.Text) > aircraft.h_MO)
+                    h = aircraft.h_MO;
                 else
                     h = double.Parse(textBox9.Text);
             }
             textBox9.Text = h.ToString();
 
 
-            double vmin = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
+            double vmin = aircraft.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
 
 
             for (double TAS
@@ -555,7 +558,7 @@ namespace project1
                 double TAS1 = Units.mps2kt(TAS);
                 tas.Add(TAS1);
                 double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
-                double T = A306.Get_T(h, CAS, Aircraft.FlightPhase.Cruise) / 10000;
+                double T = aircraft.Get_T(h, CAS, Aircraft.FlightPhase.Cruise) / 10000;
                 t.Add(T);
 
                 double Slope = T / TAS;
@@ -608,12 +611,12 @@ namespace project1
                 List<double> thrust = new List<double>();
                 for (double alt = 32000; ; alt++)
                 {
-                    double v_stall = A306.Get_v_stall(alt, Aircraft.FlightPhase.Cruise);
-                    double Tmax = A306.Get_T_max_cruise(alt, Units.kt2mps(v_stall));
+                    double v_stall = aircraft.Get_v_stall(alt, Aircraft.FlightPhase.Cruise);
+                    double Tmax = aircraft.Get_T_max_cruise(alt, Units.kt2mps(v_stall));
 
                     for (double CAS = v_stall; ; CAS++)
                     {
-                        double T = A306.Get_T(alt, Units.kt2mps(CAS), Aircraft.FlightPhase.Cruise);
+                        double T = aircraft.Get_T(alt, Units.kt2mps(CAS), Aircraft.FlightPhase.Cruise);
                         thrust.Add(T);
 
                         if (thrust.Count > 0 && T > thrust.Min())
@@ -639,7 +642,7 @@ namespace project1
             textBox10.Text = h.ToString();
 
 
-            double vmin = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
+            double vmin = aircraft.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
 
 
             for (double TAS
@@ -648,8 +651,8 @@ namespace project1
             {
                 tas.Add(TAS);
                 double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
-                double T = A306.Get_T(h, CAS, Aircraft.FlightPhase.Cruise);
-                double Tmax = A306.Get_T_max_cruise(h, CAS);
+                double T = aircraft.Get_T(h, CAS, Aircraft.FlightPhase.Cruise);
+                double Tmax = aircraft.Get_T_max_cruise(h, CAS);
                 double redundantT = (Tmax - T) / 10000;
 
                 t.Add(T);
@@ -721,15 +724,15 @@ namespace project1
             {
                 if (double.Parse(textBox11.Text) < 15000)
                     h = 15000;
-                else if (double.Parse(textBox11.Text) > A306.h_MO)
-                    h = A306.h_MO;
+                else if (double.Parse(textBox11.Text) > aircraft.h_MO)
+                    h = aircraft.h_MO;
                 else
                     h = double.Parse(textBox11.Text);
             }
             textBox11.Text = h.ToString();
 
 
-            double vmin = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
+            double vmin = aircraft.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
 
 
             for (double TAS
@@ -738,9 +741,9 @@ namespace project1
             {
                 tas.Add(TAS);
                 double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
-                double T = A306.Get_T(h, CAS, Aircraft.FlightPhase.Cruise) / 10000;
+                double T = aircraft.Get_T(h, CAS, Aircraft.FlightPhase.Cruise) / 10000;
                 double W = T * TAS / 1000;
-                double Tmax = A306.Get_T_max_cruise(h, CAS) / 10000;
+                double Tmax = aircraft.Get_T_max_cruise(h, CAS) / 10000;
                 double Wmax = Tmax * TAS / 1000;
 
                 w.Add(W);
@@ -794,15 +797,15 @@ namespace project1
             {
                 if (double.Parse(textBox12.Text) < 15000)
                     h = 15000;
-                else if (double.Parse(textBox12.Text) > A306.h_MO)
-                    h = A306.h_MO;
+                else if (double.Parse(textBox12.Text) > aircraft.h_MO)
+                    h = aircraft.h_MO;
                 else
                     h = double.Parse(textBox12.Text);
             }
             textBox12.Text = h.ToString();
 
 
-            double vmin = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
+            double vmin = aircraft.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
 
 
             for (double TAS
@@ -812,7 +815,7 @@ namespace project1
                 double TAS1 = Units.mps2kt(TAS);
                 tas.Add(TAS1);
                 double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
-                double T = A306.Get_T(h, CAS, Aircraft.FlightPhase.Cruise) / 10000;
+                double T = aircraft.Get_T(h, CAS, Aircraft.FlightPhase.Cruise) / 10000;
                 double W = T * TAS / 100;
                 double Slope = W / TAS;
 
@@ -882,12 +885,12 @@ namespace project1
                 List<double> thrust = new List<double>();
                 for (double alt = 32000; ; alt++)
                 {
-                    double v_stall = A306.Get_v_stall(alt, Aircraft.FlightPhase.Cruise);
-                    double Tmax = A306.Get_T_max_cruise(alt, Units.kt2mps(v_stall));
+                    double v_stall = aircraft.Get_v_stall(alt, Aircraft.FlightPhase.Cruise);
+                    double Tmax = aircraft.Get_T_max_cruise(alt, Units.kt2mps(v_stall));
 
                     for (double CAS = v_stall; ; CAS++)
                     {
-                        double T = A306.Get_T(alt, Units.kt2mps(CAS), Aircraft.FlightPhase.Cruise);
+                        double T = aircraft.Get_T(alt, Units.kt2mps(CAS), Aircraft.FlightPhase.Cruise);
                         thrust.Add(T);
 
                         if (thrust.Count > 0 && T > thrust.Min())
@@ -913,7 +916,7 @@ namespace project1
             textBox13.Text = h.ToString();
 
 
-            double vmin = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
+            double vmin = aircraft.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
 
 
             for (double TAS
@@ -923,9 +926,9 @@ namespace project1
                 double TAS1 = Units.mps2kt(TAS);
                 tas.Add(TAS1);
                 double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
-                double T = A306.Get_T(h, CAS, Aircraft.FlightPhase.Cruise) / 10000;
+                double T = aircraft.Get_T(h, CAS, Aircraft.FlightPhase.Cruise) / 10000;
                 double W = T * TAS;
-                double Tmax = A306.Get_T_max_cruise(h, CAS) / 10000;
+                double Tmax = aircraft.Get_T_max_cruise(h, CAS) / 10000;
                 double Wmax = Tmax * TAS;
                 double redundantW = (Wmax - W) / 1000;
 
@@ -1010,17 +1013,17 @@ namespace project1
             {
                 if (double.Parse(textBox14.Text) < 15000)
                     h1 = 15000;
-                else if (double.Parse(textBox14.Text) > A306.h_MO)
-                    h1 = A306.h_MO;
+                else if (double.Parse(textBox14.Text) > aircraft.h_MO)
+                    h1 = aircraft.h_MO;
                 else
                     h1 = double.Parse(textBox14.Text);
             }
             textBox14.Text = h1.ToString();
 
 
-            double vmin = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
+            double vmin = aircraft.Get_v_stall(h, Aircraft.FlightPhase.Cruise);
 
-            double vmin1 = A306.Get_v_stall(h1, Aircraft.FlightPhase.Cruise);
+            double vmin1 = aircraft.Get_v_stall(h1, Aircraft.FlightPhase.Cruise);
 
             for (double TAS
                 = AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(vmin));
@@ -1028,8 +1031,8 @@ namespace project1
             {
                 tas.Add(TAS);
                 double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
-                double T = A306.Get_T(h, CAS, Aircraft.FlightPhase.Cruise) / 10000;
-                double Tmax = A306.Get_T_max_cruise(h, CAS) / 10000;
+                double T = aircraft.Get_T(h, CAS, Aircraft.FlightPhase.Cruise) / 10000;
+                double Tmax = aircraft.Get_T_max_cruise(h, CAS) / 10000;
                 t.Add(T);
                 tmax.Add(Tmax);
             }
@@ -1040,8 +1043,8 @@ namespace project1
             {
                 tas1.Add(TAS);
                 double CAS = AtmosphereEnviroment.Get_CAS(h1, TAS);
-                double T = A306.Get_T(h1, CAS, Aircraft.FlightPhase.Cruise) / 10000;
-                double Tmax = A306.Get_T_max_cruise(h1, CAS) / 10000;
+                double T = aircraft.Get_T(h1, CAS, Aircraft.FlightPhase.Cruise) / 10000;
+                double Tmax = aircraft.Get_T_max_cruise(h1, CAS) / 10000;
                 t1.Add(T);
                 tmax1.Add(Tmax);
             }
@@ -1140,15 +1143,15 @@ namespace project1
             {
                 if (double.Parse(textBox15.Text) < 15000)
                     h2 = 15000;
-                else if (double.Parse(textBox15.Text) > A306.h_MO)
-                    h2 = A306.h_MO;
+                else if (double.Parse(textBox15.Text) > aircraft.h_MO)
+                    h2 = aircraft.h_MO;
                 else
                     h2 = double.Parse(textBox15.Text);
             }
             textBox15.Text = h2.ToString();
 
 
-            double CAS_min = A306.Get_v_stall(h1, Aircraft.FlightPhase.Climb);
+            double CAS_min = aircraft.Get_v_stall(h1, Aircraft.FlightPhase.Climb);
             double TAS_min = AtmosphereEnviroment.Get_TAS(h1, Units.kt2mps(CAS_min));
             double initialM = TAS_min / AtmosphereEnviroment.Get_a(h1);
             int C_L_InitialMIndex = 0;
@@ -1172,12 +1175,12 @@ namespace project1
 
                 double TAS = M * AtmosphereEnviroment.Get_a(h1);
                 double CAS = AtmosphereEnviroment.Get_CAS(h1, TAS);
-                double C_L = A306.Get_C_L(h1, CAS);
+                double C_L = aircraft.Get_C_L(h1, CAS);
                 c_l1.Add(C_L);
 
                 TAS = M * AtmosphereEnviroment.Get_a(h2);
                 CAS = AtmosphereEnviroment.Get_CAS(h2, TAS);
-                C_L = A306.Get_C_L(h2, CAS);
+                C_L = aircraft.Get_C_L(h2, CAS);
                 m2.Add(M);
                 c_l2.Add(C_L);
             }
@@ -1217,7 +1220,7 @@ namespace project1
         public double Get_High_Buffet_M(string fileName, List<double> UBO_Data_M,
             List<double> UBO_Data_C_L_max, double h, double m)
         {
-            Aircraft A306 = new Aircraft(fileName);
+            Aircraft aircraft = new Aircraft(fileName);
             double EPS = 0.001;
 
             double upperM = UBO_Data_M[UBO_Data_M.Count - 1], lowerM = upperM;
@@ -1225,7 +1228,7 @@ namespace project1
             {
                 double TAS = UBO_Data_M[i] * AtmosphereEnviroment.Get_a(h);
                 double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
-                double C_L = A306.Get_C_L(h, CAS, m: m);
+                double C_L = aircraft.Get_C_L(h, CAS, m: m);
                 if (UBO_Data_C_L_max[i] >= C_L && i + 1 < UBO_Data_M.Count)
                 {
                     lowerM = UBO_Data_M[i];
@@ -1243,7 +1246,7 @@ namespace project1
 
                 double TAS = UBO_M * AtmosphereEnviroment.Get_a(h);
                 double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
-                double C_L = A306.Get_C_L(h, CAS, m: m);
+                double C_L = aircraft.Get_C_L(h, CAS, m: m);
                 if (Math.Abs(C_L_max - C_L) < EPS) break;
             }
             return UBO_M;
@@ -1264,8 +1267,8 @@ namespace project1
             List<double> lbo_m3 = new List<double>();
             List<double> ubo_m3 = new List<double>();
 
-            double m_low = A306.m_ref - (A306.m_ref - A306.m_min) * 0.2;
-            double m_middle = A306.m_ref + (A306.m_max - A306.m_ref) * 0.1;
+            double m_low = aircraft.m_ref - (aircraft.m_ref - aircraft.m_min) * 0.2;
+            double m_middle = aircraft.m_ref + (aircraft.m_max - aircraft.m_ref) * 0.1;
 
             if (isClickedbuffetlimitwithh == false || textBox16.Text == "")
             {
@@ -1274,17 +1277,17 @@ namespace project1
             }
             else if (Regex.IsMatch(textBox16.Text, @"^[\d]{1,6}$"))
             {
-                if (double.Parse(textBox16.Text) < A306.m_min)
-                    m_middle = A306.m_min;
-                else if (double.Parse(textBox16.Text) > A306.m_max)
-                    m_middle = A306.m_max;
+                if (double.Parse(textBox16.Text) < aircraft.m_min)
+                    m_middle = aircraft.m_min;
+                else if (double.Parse(textBox16.Text) > aircraft.m_max)
+                    m_middle = aircraft.m_max;
                 else
                     m_middle = double.Parse(textBox16.Text);
             }
             textBox16.Text = m_middle.ToString();
 
 
-            double m_high = A306.m_ref + (A306.m_max - A306.m_ref) * 0.5;
+            double m_high = aircraft.m_ref + (aircraft.m_max - aircraft.m_ref) * 0.5;
 
 
             List<double> UBO_Data_M = new List<double>() { 0.2, 0.28, 0.36, 0.42, 0.46, 0.5, 0.54,
@@ -1325,7 +1328,7 @@ namespace project1
                 {
                     double TAS = UBO_Data_M[comparePosition] * AtmosphereEnviroment.Get_a(h);
                     double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
-                    double C_L = A306.Get_C_L(h, CAS, m: m_low);
+                    double C_L = aircraft.Get_C_L(h, CAS, m: m_low);
                     if (C_L < UBO_Data_C_L_max[comparePosition]) break;
                 }
                 if (comparePosition == UBO_Data_M.Count)
@@ -1339,17 +1342,17 @@ namespace project1
             for (double h = 15000; h <= h_ceiling_boundary; h += 1000)
             {
                 alt1.Add(h);
-                lbo_m1.Add(A306.Get_Low_Buffet_M(h, m: m_low, factor: factor));
+                lbo_m1.Add(aircraft.Get_Low_Buffet_M(h, m: m_low, factor: factor));
                 ubo_m1.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h, m_low));
             }
 
             double h_ceiling_middle = alt1[alt1.Count - 1] + (h_ceiling - alt1[alt1.Count - 1]) / 1.3;
             alt1.Add(h_ceiling_middle);
-            lbo_m1.Add(A306.Get_Low_Buffet_M(h_ceiling_middle, m: m_low, factor: factor));
+            lbo_m1.Add(aircraft.Get_Low_Buffet_M(h_ceiling_middle, m: m_low, factor: factor));
             ubo_m1.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h_ceiling_middle, m_low));
 
             alt1.Add(h_ceiling);
-            double buffetM_h_ceiling = A306.Get_Low_Buffet_M(h_ceiling, m: m_low, factor: factor);
+            double buffetM_h_ceiling = aircraft.Get_Low_Buffet_M(h_ceiling, m: m_low, factor: factor);
             lbo_m1.Add(buffetM_h_ceiling);
             ubo_m1.Add(buffetM_h_ceiling);
 
@@ -1362,7 +1365,7 @@ namespace project1
                 {
                     double TAS = UBO_Data_M[comparePosition] * AtmosphereEnviroment.Get_a(h);
                     double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
-                    double C_L = A306.Get_C_L(h, CAS, m: m_middle);
+                    double C_L = aircraft.Get_C_L(h, CAS, m: m_middle);
                     if (C_L < UBO_Data_C_L_max[comparePosition]) break;
                 }
                 if (comparePosition == UBO_Data_M.Count)
@@ -1376,17 +1379,17 @@ namespace project1
             for (double h = 15000; h <= h_ceiling_boundary; h += 1000)
             {
                 alt2.Add(h);
-                lbo_m2.Add(A306.Get_Low_Buffet_M(h, m: m_middle, factor: factor));
+                lbo_m2.Add(aircraft.Get_Low_Buffet_M(h, m: m_middle, factor: factor));
                 ubo_m2.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h, m_middle));
             }
 
             h_ceiling_middle = alt2[alt2.Count - 1] + (h_ceiling - alt2[alt2.Count - 1]) / 1.3;
             alt2.Add(h_ceiling_middle);
-            lbo_m2.Add(A306.Get_Low_Buffet_M(h_ceiling_middle, m: m_middle, factor: factor));
+            lbo_m2.Add(aircraft.Get_Low_Buffet_M(h_ceiling_middle, m: m_middle, factor: factor));
             ubo_m2.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h_ceiling_middle, m_middle));
 
             alt2.Add(h_ceiling);
-            buffetM_h_ceiling = A306.Get_Low_Buffet_M(h_ceiling, m: m_middle, factor: factor);
+            buffetM_h_ceiling = aircraft.Get_Low_Buffet_M(h_ceiling, m: m_middle, factor: factor);
             lbo_m2.Add(buffetM_h_ceiling);
             ubo_m2.Add(buffetM_h_ceiling);
 
@@ -1399,7 +1402,7 @@ namespace project1
                 {
                     double TAS = UBO_Data_M[comparePosition] * AtmosphereEnviroment.Get_a(h);
                     double CAS = AtmosphereEnviroment.Get_CAS(h, TAS);
-                    double C_L = A306.Get_C_L(h, CAS, m: m_high);
+                    double C_L = aircraft.Get_C_L(h, CAS, m: m_high);
                     if (C_L < UBO_Data_C_L_max[comparePosition]) break;
                 }
                 if (comparePosition == UBO_Data_M.Count)
@@ -1413,17 +1416,17 @@ namespace project1
             for (double h = 15000; h <= h_ceiling_boundary; h += 1000)
             {
                 alt3.Add(h);
-                lbo_m3.Add(A306.Get_Low_Buffet_M(h, m: m_high, factor: factor));
+                lbo_m3.Add(aircraft.Get_Low_Buffet_M(h, m: m_high, factor: factor));
                 ubo_m3.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h, m_high));
             }
 
             h_ceiling_middle = alt3[alt3.Count - 1] + (h_ceiling - alt3[alt3.Count - 1]) / 1.3;
             alt3.Add(h_ceiling_middle);
-            lbo_m3.Add(A306.Get_Low_Buffet_M(h_ceiling_middle, m: m_high, factor: factor));
+            lbo_m3.Add(aircraft.Get_Low_Buffet_M(h_ceiling_middle, m: m_high, factor: factor));
             ubo_m3.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h_ceiling_middle, m_high));
 
             alt3.Add(h_ceiling);
-            buffetM_h_ceiling = A306.Get_Low_Buffet_M(h_ceiling, m: m_high, factor: factor);
+            buffetM_h_ceiling = aircraft.Get_Low_Buffet_M(h_ceiling, m: m_high, factor: factor);
             lbo_m3.Add(buffetM_h_ceiling);
             ubo_m3.Add(buffetM_h_ceiling);
 
@@ -1554,14 +1557,14 @@ namespace project1
                 UBO_Data_C_L_max[i] *= factor;
 
             double W_ceiling = 0;
-            for (double W = A306.m_max; ; W += 1000)
+            for (double W = aircraft.m_max; ; W += 1000)
             {
                 int comparePosition;
                 for (comparePosition = 0; comparePosition < UBO_Data_M.Count; comparePosition++)
                 {
                     double TAS = UBO_Data_M[comparePosition] * AtmosphereEnviroment.Get_a(h_low);
                     double CAS = AtmosphereEnviroment.Get_CAS(h_low, TAS);
-                    double C_L = A306.Get_C_L(h_low, CAS, m: W);
+                    double C_L = aircraft.Get_C_L(h_low, CAS, m: W);
                     if (C_L < UBO_Data_C_L_max[comparePosition]) break;
                 }
                 if (comparePosition == UBO_Data_M.Count)
@@ -1572,34 +1575,34 @@ namespace project1
             }
             double W_ceiling_boundary = (int)(W_ceiling / 10000) * 10000;
 
-            for (double W = A306.m_min; W <= W_ceiling_boundary; W += 10000)
+            for (double W = aircraft.m_min; W <= W_ceiling_boundary; W += 10000)
             {
                 w1.Add(W);
-                lbo_m1.Add(A306.Get_Low_Buffet_M(h_low, m: W, factor: factor));
+                lbo_m1.Add(aircraft.Get_Low_Buffet_M(h_low, m: W, factor: factor));
                 ubo_m1.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h_low, W));
             }
 
             double W_ceiling_middle = w1[w1.Count - 1] + (W_ceiling - w1[w1.Count - 1]) / 1.3;
             w1.Add(W_ceiling_middle);
-            lbo_m1.Add(A306.Get_Low_Buffet_M(h_low, m: W_ceiling_middle, factor: factor));
+            lbo_m1.Add(aircraft.Get_Low_Buffet_M(h_low, m: W_ceiling_middle, factor: factor));
             ubo_m1.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h_low,
                 W_ceiling_middle));
 
             w1.Add(W_ceiling);
-            double buffetM_W_ceiling = A306.Get_Low_Buffet_M(h_low, m: W_ceiling, factor: factor);
+            double buffetM_W_ceiling = aircraft.Get_Low_Buffet_M(h_low, m: W_ceiling, factor: factor);
             lbo_m1.Add(buffetM_W_ceiling);
             ubo_m1.Add(buffetM_W_ceiling);
 
 
 
-            for (double W = A306.m_max; ; W += 1000)
+            for (double W = aircraft.m_max; ; W += 1000)
             {
                 int comparePosition;
                 for (comparePosition = 0; comparePosition < UBO_Data_M.Count; comparePosition++)
                 {
                     double TAS = UBO_Data_M[comparePosition] * AtmosphereEnviroment.Get_a(h_middle);
                     double CAS = AtmosphereEnviroment.Get_CAS(h_middle, TAS);
-                    double C_L = A306.Get_C_L(h_middle, CAS, m: W);
+                    double C_L = aircraft.Get_C_L(h_middle, CAS, m: W);
                     if (C_L < UBO_Data_C_L_max[comparePosition]) break;
                 }
                 if (comparePosition == UBO_Data_M.Count)
@@ -1610,34 +1613,34 @@ namespace project1
             }
             W_ceiling_boundary = (int)(W_ceiling / 10000) * 10000;
 
-            for (double W = A306.m_min; W <= W_ceiling_boundary; W += 10000)
+            for (double W = aircraft.m_min; W <= W_ceiling_boundary; W += 10000)
             {
                 w2.Add(W);
-                lbo_m2.Add(A306.Get_Low_Buffet_M(h_middle, m: W, factor: factor));
+                lbo_m2.Add(aircraft.Get_Low_Buffet_M(h_middle, m: W, factor: factor));
                 ubo_m2.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h_middle, W));
             }
 
             W_ceiling_middle = w2[w2.Count - 1] + (W_ceiling - w2[w2.Count - 1]) / 1.3;
             w2.Add(W_ceiling_middle);
-            lbo_m2.Add(A306.Get_Low_Buffet_M(h_middle, m: W_ceiling_middle, factor: factor));
+            lbo_m2.Add(aircraft.Get_Low_Buffet_M(h_middle, m: W_ceiling_middle, factor: factor));
             ubo_m2.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h_middle,
                 W_ceiling_middle));
 
             w2.Add(W_ceiling);
-            buffetM_W_ceiling = A306.Get_Low_Buffet_M(h_middle, m: W_ceiling, factor: factor);
+            buffetM_W_ceiling = aircraft.Get_Low_Buffet_M(h_middle, m: W_ceiling, factor: factor);
             lbo_m2.Add(buffetM_W_ceiling);
             ubo_m2.Add(buffetM_W_ceiling);
 
 
 
-            for (double W = A306.m_max; ; W += 1000)
+            for (double W = aircraft.m_max; ; W += 1000)
             {
                 int comparePosition;
                 for (comparePosition = 0; comparePosition < UBO_Data_M.Count; comparePosition++)
                 {
                     double TAS = UBO_Data_M[comparePosition] * AtmosphereEnviroment.Get_a(h_high);
                     double CAS = AtmosphereEnviroment.Get_CAS(h_high, TAS);
-                    double C_L = A306.Get_C_L(h_high, CAS, m: W);
+                    double C_L = aircraft.Get_C_L(h_high, CAS, m: W);
                     if (C_L < UBO_Data_C_L_max[comparePosition]) break;
                 }
                 if (comparePosition == UBO_Data_M.Count)
@@ -1648,21 +1651,21 @@ namespace project1
             }
             W_ceiling_boundary = (int)(W_ceiling / 10000) * 10000;
 
-            for (double W = A306.m_min; W <= W_ceiling_boundary; W += 10000)
+            for (double W = aircraft.m_min; W <= W_ceiling_boundary; W += 10000)
             {
                 w3.Add(W);
-                lbo_m3.Add(A306.Get_Low_Buffet_M(h_high, m: W, factor: factor));
+                lbo_m3.Add(aircraft.Get_Low_Buffet_M(h_high, m: W, factor: factor));
                 ubo_m3.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h_high, W));
             }
 
             W_ceiling_middle = w3[w3.Count - 1] + (W_ceiling - w3[w3.Count - 1]) / 1.3;
             w3.Add(W_ceiling_middle);
-            lbo_m3.Add(A306.Get_Low_Buffet_M(h_high, m: W_ceiling_middle, factor: factor));
+            lbo_m3.Add(aircraft.Get_Low_Buffet_M(h_high, m: W_ceiling_middle, factor: factor));
             ubo_m3.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h_high,
                 W_ceiling_middle));
 
             w3.Add(W_ceiling);
-            buffetM_W_ceiling = A306.Get_Low_Buffet_M(h_high, m: W_ceiling, factor: factor);
+            buffetM_W_ceiling = aircraft.Get_Low_Buffet_M(h_high, m: W_ceiling, factor: factor);
             lbo_m3.Add(buffetM_W_ceiling);
             ubo_m3.Add(buffetM_W_ceiling);
 
@@ -1675,7 +1678,7 @@ namespace project1
                 w3[i] /= 1000;
 
             double axisYMax = Math.Max(w1[w1.Count - 1], w2[w2.Count - 1]);
-            List<double> M_MO_m = new List<double>() { A306.M_MO, A306.M_MO };
+            List<double> M_MO_m = new List<double>() { aircraft.M_MO, aircraft.M_MO };
             List<double> M_MO_w = new List<double>() { 0, axisYMax + axisYMax * 0.01 };
 
 
@@ -1785,14 +1788,14 @@ namespace project1
                 UBO_Data_C_L_max[i] *= factor;
 
             double W_ceiling = 0;
-            for (double W = A306.m_max; ; W += 1000)
+            for (double W = aircraft.m_max; ; W += 1000)
             {
                 int comparePosition;
                 for (comparePosition = 0; comparePosition < UBO_Data_M.Count; comparePosition++)
                 {
                     double TAS = UBO_Data_M[comparePosition] * AtmosphereEnviroment.Get_a(h_low);
                     double CAS = AtmosphereEnviroment.Get_CAS(h_low, TAS);
-                    double C_L = A306.Get_C_L(h_low, CAS, m: W);
+                    double C_L = aircraft.Get_C_L(h_low, CAS, m: W);
                     if (C_L < UBO_Data_C_L_max[comparePosition]) break;
                 }
                 if (comparePosition == UBO_Data_M.Count)
@@ -1803,34 +1806,34 @@ namespace project1
             }
             double W_ceiling_boundary = (int)(W_ceiling / 10000) * 10000;
 
-            for (double W = A306.m_min; W <= W_ceiling_boundary; W += 10000)
+            for (double W = aircraft.m_min; W <= W_ceiling_boundary; W += 10000)
             {
                 w1.Add(W);
-                lbo_m1.Add(A306.Get_Low_Buffet_M(h_low, m: W, factor: factor));
+                lbo_m1.Add(aircraft.Get_Low_Buffet_M(h_low, m: W, factor: factor));
                 ubo_m1.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h_low, W));
             }
 
             double W_ceiling_middle = w1[w1.Count - 1] + (W_ceiling - w1[w1.Count - 1]) / 1.3;
             w1.Add(W_ceiling_middle);
-            lbo_m1.Add(A306.Get_Low_Buffet_M(h_low, m: W_ceiling_middle, factor: factor));
+            lbo_m1.Add(aircraft.Get_Low_Buffet_M(h_low, m: W_ceiling_middle, factor: factor));
             ubo_m1.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h_low,
                 W_ceiling_middle));
 
             w1.Add(W_ceiling);
-            double buffetM_W_ceiling = A306.Get_Low_Buffet_M(h_low, m: W_ceiling, factor: factor);
+            double buffetM_W_ceiling = aircraft.Get_Low_Buffet_M(h_low, m: W_ceiling, factor: factor);
             lbo_m1.Add(buffetM_W_ceiling);
             ubo_m1.Add(buffetM_W_ceiling);
 
 
 
-            for (double W = A306.m_max; ; W += 1000)
+            for (double W = aircraft.m_max; ; W += 1000)
             {
                 int comparePosition;
                 for (comparePosition = 0; comparePosition < UBO_Data_M.Count; comparePosition++)
                 {
                     double TAS = UBO_Data_M[comparePosition] * AtmosphereEnviroment.Get_a(h_middle);
                     double CAS = AtmosphereEnviroment.Get_CAS(h_middle, TAS);
-                    double C_L = A306.Get_C_L(h_middle, CAS, m: W);
+                    double C_L = aircraft.Get_C_L(h_middle, CAS, m: W);
                     if (C_L < UBO_Data_C_L_max[comparePosition]) break;
                 }
                 if (comparePosition == UBO_Data_M.Count)
@@ -1841,34 +1844,34 @@ namespace project1
             }
             W_ceiling_boundary = (int)(W_ceiling / 10000) * 10000;
 
-            for (double W = A306.m_min; W <= W_ceiling_boundary; W += 10000)
+            for (double W = aircraft.m_min; W <= W_ceiling_boundary; W += 10000)
             {
                 w2.Add(W);
-                lbo_m2.Add(A306.Get_Low_Buffet_M(h_middle, m: W, factor: factor));
+                lbo_m2.Add(aircraft.Get_Low_Buffet_M(h_middle, m: W, factor: factor));
                 ubo_m2.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h_middle, W));
             }
 
             W_ceiling_middle = w2[w2.Count - 1] + (W_ceiling - w2[w2.Count - 1]) / 1.3;
             w2.Add(W_ceiling_middle);
-            lbo_m2.Add(A306.Get_Low_Buffet_M(h_middle, m: W_ceiling_middle, factor: factor));
+            lbo_m2.Add(aircraft.Get_Low_Buffet_M(h_middle, m: W_ceiling_middle, factor: factor));
             ubo_m2.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h_middle,
                 W_ceiling_middle));
 
             w2.Add(W_ceiling);
-            buffetM_W_ceiling = A306.Get_Low_Buffet_M(h_middle, m: W_ceiling, factor: factor);
+            buffetM_W_ceiling = aircraft.Get_Low_Buffet_M(h_middle, m: W_ceiling, factor: factor);
             lbo_m2.Add(buffetM_W_ceiling);
             ubo_m2.Add(buffetM_W_ceiling);
 
 
 
-            for (double W = A306.m_max; ; W += 1000)
+            for (double W = aircraft.m_max; ; W += 1000)
             {
                 int comparePosition;
                 for (comparePosition = 0; comparePosition < UBO_Data_M.Count; comparePosition++)
                 {
                     double TAS = UBO_Data_M[comparePosition] * AtmosphereEnviroment.Get_a(h_high);
                     double CAS = AtmosphereEnviroment.Get_CAS(h_high, TAS);
-                    double C_L = A306.Get_C_L(h_high, CAS, m: W);
+                    double C_L = aircraft.Get_C_L(h_high, CAS, m: W);
                     if (C_L < UBO_Data_C_L_max[comparePosition]) break;
                 }
                 if (comparePosition == UBO_Data_M.Count)
@@ -1879,21 +1882,21 @@ namespace project1
             }
             W_ceiling_boundary = (int)(W_ceiling / 10000) * 10000;
 
-            for (double W = A306.m_min; W <= W_ceiling_boundary; W += 10000)
+            for (double W = aircraft.m_min; W <= W_ceiling_boundary; W += 10000)
             {
                 w3.Add(W);
-                lbo_m3.Add(A306.Get_Low_Buffet_M(h_high, m: W, factor: factor));
+                lbo_m3.Add(aircraft.Get_Low_Buffet_M(h_high, m: W, factor: factor));
                 ubo_m3.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h_high, W));
             }
 
             W_ceiling_middle = w3[w3.Count - 1] + (W_ceiling - w3[w3.Count - 1]) / 1.3;
             w3.Add(W_ceiling_middle);
-            lbo_m3.Add(A306.Get_Low_Buffet_M(h_high, m: W_ceiling_middle, factor: factor));
+            lbo_m3.Add(aircraft.Get_Low_Buffet_M(h_high, m: W_ceiling_middle, factor: factor));
             ubo_m3.Add(Get_High_Buffet_M(fileName, UBO_Data_M, UBO_Data_C_L_max, h_high,
                 W_ceiling_middle));
 
             w3.Add(W_ceiling);
-            buffetM_W_ceiling = A306.Get_Low_Buffet_M(h_high, m: W_ceiling, factor: factor);
+            buffetM_W_ceiling = aircraft.Get_Low_Buffet_M(h_high, m: W_ceiling, factor: factor);
             lbo_m3.Add(buffetM_W_ceiling);
             ubo_m3.Add(buffetM_W_ceiling);
 
@@ -1906,7 +1909,7 @@ namespace project1
                 w3[i] /= 1000;
 
             
-            List<double> M_MO_m = new List<double>() { A306.M_MO };
+            List<double> M_MO_m = new List<double>() { aircraft.M_MO };
             List<double> M_MO_w = new List<double>() { 0 };
 
 
@@ -2079,8 +2082,8 @@ namespace project1
         double mFlightEnvelope;
         public double GetRedundantT(string fileName, double h, double CAS)
         {
-            Aircraft A306 = new Aircraft(fileName);
-            return A306.Get_T_max_cruise(h, Units.kt2mps(CAS)) - A306.Get_T(h,
+            Aircraft aircraft = new Aircraft(fileName);
+            return aircraft.Get_T_max_cruise(h, Units.kt2mps(CAS)) - aircraft.Get_T(h,
                 Units.kt2mps(CAS), Aircraft.FlightPhase.Cruise, m: mFlightEnvelope);
         }
 
@@ -2088,11 +2091,11 @@ namespace project1
         public double GetFlightEnvelopeMinimumW(double minimumh)
         {
             double W;
-            for(W = A306.m_ref; ; W -= 100)
+            for(W = aircraft.m_ref; ; W -= 100)
             {
-                double v_stall_CAS = A306.Get_v_stall(minimumh, Aircraft.FlightPhase.Cruise, m: W);
+                double v_stall_CAS = aircraft.Get_v_stall(minimumh, Aircraft.FlightPhase.Cruise, m: W);
                 double v_stall_TAS = AtmosphereEnviroment.Get_TAS(minimumh, Units.kt2mps(v_stall_CAS));
-                double M = A306.Get_Low_Buffet_M(minimumh, m: W, factor: 0.98);
+                double M = aircraft.Get_Low_Buffet_M(minimumh, m: W, factor: 0.98);
                 double v_lbo = M * AtmosphereEnviroment.Get_a(minimumh);
                 if (v_lbo <= v_stall_TAS) break;
             }
@@ -2118,7 +2121,7 @@ namespace project1
             List<double> v_max_t = new List<double>();
 
 
-            double m = A306.m_ref;
+            double m = aircraft.m_ref;
             if (isClickedflightenvelope == false || textBox5.Text == "")
             {
                 isClickedflightenvelope = true;
@@ -2130,8 +2133,8 @@ namespace project1
             {
                 if (double.Parse(textBox5.Text) < flightEnvelopeMinimumW)
                     m = flightEnvelopeMinimumW;
-                else if (double.Parse(textBox5.Text) > A306.m_max)
-                    m = A306.m_max;
+                else if (double.Parse(textBox5.Text) > aircraft.m_max)
+                    m = aircraft.m_max;
                 else
                     m = double.Parse(textBox5.Text);
             }
@@ -2143,9 +2146,9 @@ namespace project1
             double initialh = 0;
             for (double h = 15000; ; h++)
             {
-                double v_stall = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise, m: m);
-                double t = A306.Get_T(h, Units.kt2mps(v_stall), Aircraft.FlightPhase.Cruise, m: m);
-                double t_max = A306.Get_T_max_cruise(h, Units.kt2mps(v_stall));
+                double v_stall = aircraft.Get_v_stall(h, Aircraft.FlightPhase.Cruise, m: m);
+                double t = aircraft.Get_T(h, Units.kt2mps(v_stall), Aircraft.FlightPhase.Cruise, m: m);
+                double t_max = aircraft.Get_T_max_cruise(h, Units.kt2mps(v_stall));
                 if (t_max < t)
                 {
                     initialh = h;
@@ -2163,14 +2166,14 @@ namespace project1
 
             for (double h = 32000; ; h++)
             {
-                double v_stall = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise, m: m);
-                double tmax = A306.Get_T_max_cruise(h, Units.kt2mps(v_stall));
+                double v_stall = aircraft.Get_v_stall(h, Aircraft.FlightPhase.Cruise, m: m);
+                double tmax = aircraft.Get_T_max_cruise(h, Units.kt2mps(v_stall));
 
                 for (double CAS = v_stall; ; CAS++)
                 {
                     v_CAS.Add(CAS);
 
-                    double t = A306.Get_T(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Cruise, m: m);
+                    double t = aircraft.Get_T(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Cruise, m: m);
                     thrust.Add(t);
 
                     if (thrust.Count > 0 && t > thrust.Min())
@@ -2191,10 +2194,10 @@ namespace project1
             for (double h = 15000; h < initialh; h += 1000)
             {
                 altitude_stall.Add(h);
-                vStall.Add(AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise, m: m))));
+                vStall.Add(AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(aircraft.Get_v_stall(h, Aircraft.FlightPhase.Cruise, m: m))));
             }
             altitude_stall.Add(initialh);
-            vStall.Add(AtmosphereEnviroment.Get_TAS(initialh, Units.kt2mps(A306.Get_v_stall(initialh, Aircraft.FlightPhase.Cruise, m: m))));
+            vStall.Add(AtmosphereEnviroment.Get_TAS(initialh, Units.kt2mps(aircraft.Get_v_stall(initialh, Aircraft.FlightPhase.Cruise, m: m))));
 
 
             for (double h = 15000; h <= h_ceiling_boundary; h += 1000)
@@ -2206,7 +2209,7 @@ namespace project1
                 if (h >= initialh)
                     altitude_v_min_t.Add(h);
 
-                double lowerBoundary = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise, m: m);
+                double lowerBoundary = aircraft.Get_v_stall(h, Aircraft.FlightPhase.Cruise, m: m);
                 double upperBoundary = 600;
                 double step = 1;
                 const double EPS = 1;
@@ -2255,14 +2258,14 @@ namespace project1
             for (double h = 15000; h <= h_ceiling_boundary; h += 1000)
             {
                 altitude_v_lbo.Add(h);
-                double M = A306.Get_Low_Buffet_M(h, m: m, factor: 0.98);
+                double M = aircraft.Get_Low_Buffet_M(h, m: m, factor: 0.98);
                 v_buffet.Add(M * AtmosphereEnviroment.Get_a(h));
             }
 
 
 
             double h_ceiling_middle = h_ceiling_boundary / 2 + h_ceiling / 2;
-            List<double> h_ceiling_middleVRoots = BisectionRootsCalculation(A306.Get_v_stall(h_ceiling_middle, Aircraft.FlightPhase.Cruise, m: m), 600, 1, 1, GetRedundantT, fileName, h_ceiling_middle, 2);
+            List<double> h_ceiling_middleVRoots = BisectionRootsCalculation(aircraft.Get_v_stall(h_ceiling_middle, Aircraft.FlightPhase.Cruise, m: m), 600, 1, 1, GetRedundantT, fileName, h_ceiling_middle, 2);
             if (h_ceiling_middleVRoots.Count >= 2)
             {
                 altitude.Add(h_ceiling_middle);
@@ -2286,27 +2289,27 @@ namespace project1
             List<double> altitude_v_ubo = new List<double>();
 
 
-            double h_cross = AtmosphereEnviroment.Get_h_cross(Units.kt2mps(A306.v_MO), A306.M_MO);
+            double h_cross = AtmosphereEnviroment.Get_h_cross(Units.kt2mps(aircraft.v_MO), aircraft.M_MO);
 
             for (double h = 15000; h <= h_ceiling_boundary + 1000; h += 1000)
             {
                 if (h == ((int)h_cross / 1000) * 1000)
                 {
                     altitude_v_MO.Add(h_cross);
-                    v_v_MO.Add(AtmosphereEnviroment.Get_TAS(h_cross, Units.kt2mps(A306.v_MO)));
+                    v_v_MO.Add(AtmosphereEnviroment.Get_TAS(h_cross, Units.kt2mps(aircraft.v_MO)));
                     altitude_M_MO.Add(h_cross);
-                    v_M_MO.Add(A306.M_MO * AtmosphereEnviroment.Get_a(h_cross));
+                    v_M_MO.Add(aircraft.M_MO * AtmosphereEnviroment.Get_a(h_cross));
                     h = h_cross;
                 }
                 else if (h < h_cross)
                 {
                     altitude_v_MO.Add(h);
-                    v_v_MO.Add(AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(A306.v_MO)));
+                    v_v_MO.Add(AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(aircraft.v_MO)));
                 }
                 else
                 {
                     altitude_M_MO.Add(h);
-                    v_M_MO.Add(A306.M_MO * AtmosphereEnviroment.Get_a(h));
+                    v_M_MO.Add(aircraft.M_MO * AtmosphereEnviroment.Get_a(h));
                 }
             }
 
@@ -2454,7 +2457,7 @@ namespace project1
             List<double> altitude = new List<double>();
             List<double> v_max_t = new List<double>();
 
-            double m = A306.m_ref;
+            double m = aircraft.m_ref;
             if (isClickedflightenvelope == false || textBox5.Text == "")
             {
                 isClickedflightenvelope = true;
@@ -2466,8 +2469,8 @@ namespace project1
             {
                 if (double.Parse(textBox5.Text) < flightEnvelopeMinimumW)
                     m = flightEnvelopeMinimumW;
-                else if (double.Parse(textBox5.Text) > A306.m_max)
-                    m = A306.m_max;
+                else if (double.Parse(textBox5.Text) > aircraft.m_max)
+                    m = aircraft.m_max;
                 else
                     m = double.Parse(textBox5.Text);
             }
@@ -2479,9 +2482,9 @@ namespace project1
             double initialh = 0;
             for (double h = 15000; ; h++)
             {
-                double v_stall = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise, m: m);
-                double t = A306.Get_T(h, Units.kt2mps(v_stall), Aircraft.FlightPhase.Cruise, m: m);
-                double t_max = A306.Get_T_max_cruise(h, Units.kt2mps(v_stall));
+                double v_stall = aircraft.Get_v_stall(h, Aircraft.FlightPhase.Cruise, m: m);
+                double t = aircraft.Get_T(h, Units.kt2mps(v_stall), Aircraft.FlightPhase.Cruise, m: m);
+                double t_max = aircraft.Get_T_max_cruise(h, Units.kt2mps(v_stall));
                 if (t_max < t)
                 {
                     initialh = h;
@@ -2499,14 +2502,14 @@ namespace project1
 
             for (double h = 32000; ; h++)
             {
-                double v_stall = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise, m: m);
-                double tmax = A306.Get_T_max_cruise(h, Units.kt2mps(v_stall));
+                double v_stall = aircraft.Get_v_stall(h, Aircraft.FlightPhase.Cruise, m: m);
+                double tmax = aircraft.Get_T_max_cruise(h, Units.kt2mps(v_stall));
 
                 for (double CAS = v_stall; ; CAS++)
                 {
                     v_CAS.Add(CAS);
 
-                    double t = A306.Get_T(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Cruise, m: m);
+                    double t = aircraft.Get_T(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Cruise, m: m);
                     thrust.Add(t);
 
                     if (thrust.Count > 0 && t > thrust.Min())
@@ -2528,10 +2531,10 @@ namespace project1
             for (double h = 15000; h < initialh; h += 1000)
             {
                 altitude_stall.Add(h);
-                vStall.Add(AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise, m: m))));
+                vStall.Add(AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(aircraft.Get_v_stall(h, Aircraft.FlightPhase.Cruise, m: m))));
             }
             altitude_stall.Add(initialh);
-            vStall.Add(AtmosphereEnviroment.Get_TAS(initialh, Units.kt2mps(A306.Get_v_stall(initialh, Aircraft.FlightPhase.Cruise, m: m))));
+            vStall.Add(AtmosphereEnviroment.Get_TAS(initialh, Units.kt2mps(aircraft.Get_v_stall(initialh, Aircraft.FlightPhase.Cruise, m: m))));
 
 
             for (double h = 15000; h <= h_ceiling_boundary; h += 1000)
@@ -2545,7 +2548,7 @@ namespace project1
                 if (h >= initialh)
                     altitude_v_min_t.Add(h);
 
-                double lowerBoundary = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise, m: m);
+                double lowerBoundary = aircraft.Get_v_stall(h, Aircraft.FlightPhase.Cruise, m: m);
                 double upperBoundary = 600;
                 double step = 1;
                 const double EPS = 1;
@@ -2594,14 +2597,14 @@ namespace project1
             for (double h = 15000; h <= h_ceiling_boundary; h += 1000)
             {
                 altitude_v_min.Add(h);
-                double M = A306.Get_Low_Buffet_M(h, m: m, factor: 0.98);
+                double M = aircraft.Get_Low_Buffet_M(h, m: m, factor: 0.98);
                 v_buffet.Add(M * AtmosphereEnviroment.Get_a(h));
             }
 
 
 
             double h_ceiling_middle = h_ceiling_boundary / 2 + h_ceiling / 2;
-            List<double> h_ceiling_middleVRoots = BisectionRootsCalculation(A306.Get_v_stall(h_ceiling_middle, Aircraft.FlightPhase.Cruise, m: m), 600, 1, 1, GetRedundantT, fileName, h_ceiling_middle, 2);
+            List<double> h_ceiling_middleVRoots = BisectionRootsCalculation(aircraft.Get_v_stall(h_ceiling_middle, Aircraft.FlightPhase.Cruise, m: m), 600, 1, 1, GetRedundantT, fileName, h_ceiling_middle, 2);
             if (h_ceiling_middleVRoots.Count >= 2)
             {
                 altitude.Add(h_ceiling_middle);
@@ -2625,22 +2628,22 @@ namespace project1
             List<double> v_ubo = new List<double>();
             List<double> altitude_v_ubo = new List<double>();
 
-            double h_cross = AtmosphereEnviroment.Get_h_cross(Units.kt2mps(A306.v_MO), A306.M_MO);
+            double h_cross = AtmosphereEnviroment.Get_h_cross(Units.kt2mps(aircraft.v_MO), aircraft.M_MO);
 
             for (double h = 15000; h <= h_ceiling_boundary + 1000; h += 1000)
             {
                 if (h == ((int)h_cross / 1000) * 1000)
                 {
                     altitude_v_MO.Add(h_cross);
-                    v_v_MO.Add(AtmosphereEnviroment.Get_TAS(h_cross, Units.kt2mps(A306.v_MO)));
+                    v_v_MO.Add(AtmosphereEnviroment.Get_TAS(h_cross, Units.kt2mps(aircraft.v_MO)));
                     altitude_M_MO.Add(h_cross);
-                    v_M_MO.Add(A306.M_MO * AtmosphereEnviroment.Get_a(h_cross));
+                    v_M_MO.Add(aircraft.M_MO * AtmosphereEnviroment.Get_a(h_cross));
                     h = h_cross;
                 }
                 else if (h < h_cross)
                 {
                     altitude_v_MO.Add(h);
-                    v_v_MO.Add(AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(A306.v_MO)));
+                    v_v_MO.Add(AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(aircraft.v_MO)));
                 }
                 else
                 {
@@ -2649,10 +2652,10 @@ namespace project1
                     else if (h == ((int)initialh / 1000) * 1000 + 1000)
                     {
                         altitude_M_MO.Add(initialh);
-                        v_M_MO.Add(A306.M_MO * AtmosphereEnviroment.Get_a(initialh));
+                        v_M_MO.Add(aircraft.M_MO * AtmosphereEnviroment.Get_a(initialh));
                     }
                     altitude_M_MO.Add(h);
-                    v_M_MO.Add(A306.M_MO * AtmosphereEnviroment.Get_a(h));
+                    v_M_MO.Add(aircraft.M_MO * AtmosphereEnviroment.Get_a(h));
                 }
             }
 
@@ -2773,7 +2776,7 @@ namespace project1
                 v_M_MO.Remove(v_M_MO[v_M_MO.Count - 1]);
             }
             altitude_M_MO.Add(h_ceiling_middle);
-            v_M_MO.Add(A306.M_MO * AtmosphereEnviroment.Get_a(h_ceiling_middle));
+            v_M_MO.Add(aircraft.M_MO * AtmosphereEnviroment.Get_a(h_ceiling_middle));
             while (altitude_M_MO.Contains(altitude[0]) && v_max_t[0] >= v_M_MO[altitude_M_MO.IndexOf(altitude[0])])
             {
                 altitude.Remove(altitude[0]);
@@ -2894,10 +2897,10 @@ namespace project1
 
         public double GetBFLSpread(string fileName, double numberOfEngines, double CAS)
         {
-            Aircraft A306 = new Aircraft(fileName);
-            return A306.Get_Balanced_Field_Length((int)numberOfEngines, CAS,
+            Aircraft aircraft = new Aircraft(fileName);
+            return aircraft.Get_Balanced_Field_Length((int)numberOfEngines, CAS,
                 Aircraft.Balanced_Field_LengthType.AccelerateGo) -
-                A306.Get_Balanced_Field_Length((int)numberOfEngines, CAS,
+                aircraft.Get_Balanced_Field_Length((int)numberOfEngines, CAS,
                 Aircraft.Balanced_Field_LengthType.AccelerateStop);
         }
 
@@ -2909,12 +2912,12 @@ namespace project1
             List<double> bflAccelerateStop = new List<double>();
 
 
-            double V1_max = Units.kt2mps(A306.Get_V_1_Maximum());
+            double V1_max = Units.kt2mps(aircraft.Get_V_1_Maximum());
             for (double V1 = 0.9 * V1_max; V1 <= V1_max; V1 += 0.1)
             {
                 v1.Add(V1);
-                bflAccelerateGo.Add(A306.Get_Balanced_Field_Length(2, V1, Aircraft.Balanced_Field_LengthType.AccelerateGo));
-                bflAccelerateStop.Add(A306.Get_Balanced_Field_Length(2, V1, Aircraft.Balanced_Field_LengthType.AccelerateStop));
+                bflAccelerateGo.Add(aircraft.Get_Balanced_Field_Length(2, V1, Aircraft.Balanced_Field_LengthType.AccelerateGo));
+                bflAccelerateStop.Add(aircraft.Get_Balanced_Field_Length(2, V1, Aircraft.Balanced_Field_LengthType.AccelerateStop));
             }
 
 
@@ -2922,7 +2925,7 @@ namespace project1
             double BFL_V1 = 0;
             if (BFL_V1Roots.Count >= 1)
                 BFL_V1 = BFL_V1Roots[0];
-            double BFL = A306.Get_Balanced_Field_Length(2, BFL_V1, Aircraft.Balanced_Field_LengthType.AccelerateGo);
+            double BFL = aircraft.Get_Balanced_Field_Length(2, BFL_V1, Aircraft.Balanced_Field_LengthType.AccelerateGo);
 
 
             int v1InsertIndex = 0, bflAccelerateGoInsertIndex = 0, bflAccelerateStopInsertIndex = 0;
@@ -2997,7 +3000,7 @@ namespace project1
             List<double> tas = new List<double>();
 
 
-            double W = A306.m_ref * AtmosphereEnviroment.g;
+            double W = aircraft.m_ref * AtmosphereEnviroment.g;
             double h = 18000;
 
             if (isClickedcg == false || textBox18.Text == "")
@@ -3007,8 +3010,8 @@ namespace project1
             }
             else if (Regex.IsMatch(textBox18.Text, @"^[\d]{1,5}$"))
             {
-                if (double.Parse(textBox18.Text) > ((int)A306.h_MO / 10000) * 10000)
-                    h = ((int)A306.h_MO / 10000) * 10000;
+                if (double.Parse(textBox18.Text) > ((int)aircraft.h_MO / 10000) * 10000)
+                    h = ((int)aircraft.h_MO / 10000) * 10000;
                 else
                     h = double.Parse(textBox18.Text);
             }
@@ -3018,8 +3021,8 @@ namespace project1
             double initialCAS = 0;
             for (double CAS = 0; CAS <= 500; CAS++)
             {
-                double T = A306.Get_T(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Climb);
-                double D = A306.Get_D(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Climb);
+                double T = aircraft.Get_T(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Climb);
+                double D = aircraft.Get_D(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Climb);
                 if (T > D)
                 {
                     initialCAS = --CAS;
@@ -3034,8 +3037,8 @@ namespace project1
             double endCAS = 0;
             for (double CAS = 600; CAS >= 0; CAS--)
             {
-                double T = A306.Get_T(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Climb);
-                double D = A306.Get_D(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Climb);
+                double T = aircraft.Get_T(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Climb);
+                double D = aircraft.Get_D(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Climb);
                 if (T > D)
                 {
                     endCAS = ++CAS;
@@ -3051,9 +3054,9 @@ namespace project1
                 double TAS = AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(CAS));
                 tas.Add(Units.mps2kt(TAS));
 
-                double T = A306.Get_T(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Climb);
-                double D = A306.Get_D(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Climb);
-                double FM = A306.Get_functionM(h, Aircraft.SpeedMode.ConstantCAS, Units.kt2mps(CAS));
+                double T = aircraft.Get_T(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Climb);
+                double D = aircraft.Get_D(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Climb);
+                double FM = aircraft.Get_functionM(h, Aircraft.SpeedMode.ConstantCAS, Units.kt2mps(CAS));
 
                 double CG = (T - D) / W / FM;
                 cg.Add(CG);
@@ -3095,8 +3098,8 @@ namespace project1
             }
             else if (Regex.IsMatch(textBox19.Text, @"^[\d]{1,5}$"))
             {
-                if (double.Parse(textBox19.Text) > ((int)A306.h_MO / 10000) * 10000)
-                    h = ((int)A306.h_MO / 10000) * 10000;
+                if (double.Parse(textBox19.Text) > ((int)aircraft.h_MO / 10000) * 10000)
+                    h = ((int)aircraft.h_MO / 10000) * 10000;
                 else
                     h = double.Parse(textBox19.Text);
             }
@@ -3106,7 +3109,7 @@ namespace project1
             double initialCAS = 0;
             for (double CAS = 0; CAS <= 600; CAS++)
             {
-                double ROCD = A306.Get_ROCD(h, Aircraft.SpeedMode.ConstantCAS, Units.kt2mps(CAS), Aircraft.FlightPhase.Climb);
+                double ROCD = aircraft.Get_ROCD(h, Aircraft.SpeedMode.ConstantCAS, Units.kt2mps(CAS), Aircraft.FlightPhase.Climb);
                 if (ROCD > 0)
                 {
                     initialCAS = --CAS;
@@ -3118,7 +3121,7 @@ namespace project1
             double endCAS = 0;
             for (double CAS = 600; CAS >= 0; CAS--)
             {
-                double ROCD = A306.Get_ROCD(h, Aircraft.SpeedMode.ConstantCAS, Units.kt2mps(CAS), Aircraft.FlightPhase.Climb);
+                double ROCD = aircraft.Get_ROCD(h, Aircraft.SpeedMode.ConstantCAS, Units.kt2mps(CAS), Aircraft.FlightPhase.Climb);
                 if (ROCD > 0)
                 {
                     endCAS = ++CAS;
@@ -3131,7 +3134,7 @@ namespace project1
                 double TAS = AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(CAS));
                 tas.Add(Units.mps2kt(TAS));
 
-                double ROCD = A306.Get_ROCD(h, Aircraft.SpeedMode.ConstantCAS, Units.kt2mps(CAS), Aircraft.FlightPhase.Climb);
+                double ROCD = aircraft.Get_ROCD(h, Aircraft.SpeedMode.ConstantCAS, Units.kt2mps(CAS), Aircraft.FlightPhase.Climb);
                 rocd.Add(ROCD);
             }
 
@@ -3157,22 +3160,23 @@ namespace project1
         // 爬升数值表
         private void button29_Click(object sender, EventArgs e)
         {
+            double m_low = 104400;
+            double m_nominal = 140000;
+            double m_high = 171700;
+
             textBox1.Text = "\t\t\t    CLIMB" + System.Environment.NewLine;
-            textBox1.Text += "\tCAS/M: 250/300/.79\t\tTemperature: ISA" + System.Environment.NewLine;
-            textBox1.Text += "\tlo: 104.4t\tnom: 140t\thi: 171.7t" + System.Environment.NewLine;
+            textBox1.Text += $"\tCAS/M: {aircraft.v_cl_1}/{aircraft.v_cl_2}/{aircraft.M_cl.ToString().Substring(1)}\t\tTemperature: ISA" + System.Environment.NewLine;
+            textBox1.Text += $"\tlo: {m_low / 1000}t\tnom: {m_nominal / 1000}t\thi: {m_high / 1000}t" + System.Environment.NewLine;
             textBox1.Text += "\t================================================" + System.Environment.NewLine;
             textBox1.Text += "\tFL\t TAS\t\tROCD\t\t fuel" + System.Environment.NewLine;
             textBox1.Text += "\t\t[kts]\t\t[fpm]\t\t[kg/min]" + System.Environment.NewLine;
             textBox1.Text += "\t\t\t lo\t nom\t hi\t nom" + System.Environment.NewLine;
             textBox1.Text += "\t================================================" + System.Environment.NewLine;
-
-            double m_low = 104400;
-            double m_low_v_climb = A306.m_min;
+            
+            double m_low_v_climb = aircraft.m_min;
             double m_low_above_h_cross = 108000;
-            double m_nominal = 140000;
-            double m_high = 171700;
-
-            double h_cross = AtmosphereEnviroment.Get_h_cross(Units.kt2mps(A306.v_cl_2), A306.M_cl);
+            
+            double h_cross = AtmosphereEnviroment.Get_h_cross(Units.kt2mps(aircraft.v_cl_2), aircraft.M_cl);
 
             for (double h = 0; h <= 41000;)
             {
@@ -3180,13 +3184,13 @@ namespace project1
                 double CAS_nominal = 0;
                 double CAS_high = 0;
                 double TAS = 0;
-                double M_cl = A306.M_cl;
+                double M_cl = aircraft.M_cl;
 
                 if (h <= h_cross)
                 {
-                    CAS_low = A306.Get_v_climb(h, m: m_low_v_climb);
-                    CAS_nominal = A306.Get_v_climb(h, m: m_nominal);
-                    CAS_high = A306.Get_v_climb(h, m: m_high);
+                    CAS_low = aircraft.Get_v_climb(h, m: m_low_v_climb);
+                    CAS_nominal = aircraft.Get_v_climb(h, m: m_nominal);
+                    CAS_high = aircraft.Get_v_climb(h, m: m_high);
                     TAS = Units.mps2kt(AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(CAS_nominal)));
                     TAS = Math.Round(TAS);
                 }
@@ -3199,35 +3203,35 @@ namespace project1
 
                 double ROCD_low;
                 if (h > h_cross)
-                    ROCD_low = A306.Get_ROCD(h, Aircraft.SpeedMode.ConstantMach, M_cl, Aircraft.FlightPhase.Climb, m: m_low_above_h_cross);
+                    ROCD_low = aircraft.Get_ROCD(h, Aircraft.SpeedMode.ConstantMach, M_cl, Aircraft.FlightPhase.Climb, m: m_low_above_h_cross);
                 else
-                    ROCD_low = A306.Get_ROCD(h, Aircraft.SpeedMode.ConstantCAS, Units.kt2mps(CAS_low), Aircraft.FlightPhase.Climb, m: m_low, reduceFlag: true);
+                    ROCD_low = aircraft.Get_ROCD(h, Aircraft.SpeedMode.ConstantCAS, Units.kt2mps(CAS_low), Aircraft.FlightPhase.Climb, m: m_low, reduceFlag: true);
                 ROCD_low = Math.Round(ROCD_low);
                 if (ROCD_low < 0) ROCD_low = 0;
 
 
                 double ROCD_nominal;
                 if (h > h_cross)
-                    ROCD_nominal = A306.Get_ROCD(h, Aircraft.SpeedMode.ConstantMach, M_cl, Aircraft.FlightPhase.Climb, m: m_nominal);
+                    ROCD_nominal = aircraft.Get_ROCD(h, Aircraft.SpeedMode.ConstantMach, M_cl, Aircraft.FlightPhase.Climb, m: m_nominal);
                 else
-                    ROCD_nominal = A306.Get_ROCD(h, Aircraft.SpeedMode.ConstantCAS, Units.kt2mps(CAS_nominal), Aircraft.FlightPhase.Climb, m: m_nominal, reduceFlag: true);
+                    ROCD_nominal = aircraft.Get_ROCD(h, Aircraft.SpeedMode.ConstantCAS, Units.kt2mps(CAS_nominal), Aircraft.FlightPhase.Climb, m: m_nominal, reduceFlag: true);
                 ROCD_nominal = Math.Round(ROCD_nominal);
                 if (ROCD_nominal < 0) ROCD_nominal = 0;
 
 
                 double ROCD_high;
                 if (h > h_cross)
-                    ROCD_high = A306.Get_ROCD(h, Aircraft.SpeedMode.ConstantMach, M_cl, Aircraft.FlightPhase.Climb, m: m_high);
+                    ROCD_high = aircraft.Get_ROCD(h, Aircraft.SpeedMode.ConstantMach, M_cl, Aircraft.FlightPhase.Climb, m: m_high);
                 else
-                    ROCD_high = A306.Get_ROCD(h, Aircraft.SpeedMode.ConstantCAS, Units.kt2mps(CAS_high), Aircraft.FlightPhase.Climb, m: m_high, reduceFlag: true);
+                    ROCD_high = aircraft.Get_ROCD(h, Aircraft.SpeedMode.ConstantCAS, Units.kt2mps(CAS_high), Aircraft.FlightPhase.Climb, m: m_high, reduceFlag: true);
                 ROCD_high = Math.Round(ROCD_high);
                 if (ROCD_high < 0) ROCD_high = 0;
 
 
                 if (h > h_cross)
-                    CAS_nominal = A306.Get_v_climb(h); ;
+                    CAS_nominal = aircraft.Get_v_climb(h); ;
                 double ff;
-                ff = A306.Get_ff(Aircraft.FlightPhase.Climb, h: h, CAS: Units.kt2mps(CAS_nominal));
+                ff = aircraft.Get_ff(Aircraft.FlightPhase.Climb, h: h, CAS: Units.kt2mps(CAS_nominal));
                 ff = Math.Round(ff, 1);
 
                 if(h == 41000)
@@ -3262,8 +3266,8 @@ namespace project1
 
             double h = 33000;
 
-            double m_high = A306.m_ref - (A306.m_ref - A306.m_min) * 0.5;
-            double m_middle = A306.m_ref - (A306.m_ref - A306.m_min) * 0.7;
+            double m_high = aircraft.m_ref - (aircraft.m_ref - aircraft.m_min) * 0.5;
+            double m_middle = aircraft.m_ref - (aircraft.m_ref - aircraft.m_min) * 0.7;
 
             if (isClickedcruisetype == false || textBox23.Text == "")
             {
@@ -3272,20 +3276,20 @@ namespace project1
             }
             else if (Regex.IsMatch(textBox23.Text, @"^[\d]{1,6}$"))
             {
-                if (double.Parse(textBox23.Text) < A306.m_min)
-                    m_middle = A306.m_min;
-                else if(double.Parse(textBox23.Text) > A306.m_max)
-                    m_middle = A306.m_max;
+                if (double.Parse(textBox23.Text) < aircraft.m_min)
+                    m_middle = aircraft.m_min;
+                else if(double.Parse(textBox23.Text) > aircraft.m_max)
+                    m_middle = aircraft.m_max;
                 else
                     m_middle = double.Parse(textBox23.Text);
             }
             textBox23.Text = m_middle.ToString();
 
 
-            double m_low = A306.m_ref - (A306.m_ref - A306.m_min) * 0.9;
+            double m_low = aircraft.m_ref - (aircraft.m_ref - aircraft.m_min) * 0.9;
 
 
-            for (double CAS = A306.Get_v_stall(h, Aircraft.FlightPhase.Cruise); CAS <= 500; CAS++)
+            for (double CAS = aircraft.Get_v_stall(h, Aircraft.FlightPhase.Cruise); CAS <= 500; CAS++)
             {
                 double TAS = AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(CAS));
                 double a = AtmosphereEnviroment.Get_a(h);
@@ -3293,19 +3297,19 @@ namespace project1
 
                 m.Add(M);
 
-                double ff = A306.Get_ff(Aircraft.FlightPhase.Cruise, m: m_high, h: h, CAS: Units.kt2mps(CAS));
+                double ff = aircraft.Get_ff(Aircraft.FlightPhase.Cruise, m: m_high, h: h, CAS: Units.kt2mps(CAS));
                 ff /= 60;
 
                 double SR = TAS / ff;
                 sr.Add(SR);
 
-                ff = A306.Get_ff(Aircraft.FlightPhase.Cruise, m: m_middle, h: h, CAS: Units.kt2mps(CAS));
+                ff = aircraft.Get_ff(Aircraft.FlightPhase.Cruise, m: m_middle, h: h, CAS: Units.kt2mps(CAS));
                 ff /= 60;
 
                 SR = TAS / ff;
                 sr1.Add(SR);
 
-                ff = A306.Get_ff(Aircraft.FlightPhase.Cruise, m: m_low, h: h, CAS: Units.kt2mps(CAS));
+                ff = aircraft.Get_ff(Aircraft.FlightPhase.Cruise, m: m_low, h: h, CAS: Units.kt2mps(CAS));
                 ff /= 60;
 
                 SR = TAS / ff;
@@ -3447,8 +3451,8 @@ namespace project1
             List<double> sr1 = new List<double>();
             List<double> sr2 = new List<double>();
 
-            double m_high = A306.m_max - (A306.m_max - A306.m_ref) * 0.6;
-            double m_middle = A306.m_max - (A306.m_max - A306.m_ref) * 0.8;
+            double m_high = aircraft.m_max - (aircraft.m_max - aircraft.m_ref) * 0.6;
+            double m_middle = aircraft.m_max - (aircraft.m_max - aircraft.m_ref) * 0.8;
 
             
 
@@ -3457,15 +3461,15 @@ namespace project1
                 isClickedoptimalaltitude = true;
                 textBox24.ReadOnly = false;
 
-                for (mCurved = A306.m_min; ; mCurved += 10)
+                for (mCurved = aircraft.m_min; ; mCurved += 10)
                 {
                     bool findmCurved = false;
-                    double lastSR = A306.Get_ff(Aircraft.FlightPhase.Cruise, m: mCurved, h: 30000, CAS: AtmosphereEnviroment.Get_CAS(30000, A306.M_MO * AtmosphereEnviroment.Get_a(30000)));
+                    double lastSR = aircraft.Get_ff(Aircraft.FlightPhase.Cruise, m: mCurved, h: 30000, CAS: AtmosphereEnviroment.Get_CAS(30000, aircraft.M_MO * AtmosphereEnviroment.Get_a(30000)));
                     for (double alt = 30000; alt <= 43000; alt += 1000)
                     {
-                        double TAS = A306.M_MO * AtmosphereEnviroment.Get_a(alt);
+                        double TAS = aircraft.M_MO * AtmosphereEnviroment.Get_a(alt);
                         double CAS = AtmosphereEnviroment.Get_CAS(alt, TAS);
-                        double ff = A306.Get_ff(Aircraft.FlightPhase.Cruise, m: mCurved, h: alt, CAS: CAS);
+                        double ff = aircraft.Get_ff(Aircraft.FlightPhase.Cruise, m: mCurved, h: alt, CAS: CAS);
                         ff /= 60;
                         double SR = TAS / ff;
                         if (SR < lastSR)
@@ -3484,36 +3488,36 @@ namespace project1
             {
                 if (double.Parse(textBox24.Text) < mCurved)
                     m_middle = mCurved;
-                else if (double.Parse(textBox24.Text) > A306.m_max)
-                    m_middle = A306.m_max;
+                else if (double.Parse(textBox24.Text) > aircraft.m_max)
+                    m_middle = aircraft.m_max;
                 else
                     m_middle = double.Parse(textBox24.Text);
             }
             textBox24.Text = m_middle.ToString();
 
 
-            double m_low = A306.m_ref;
+            double m_low = aircraft.m_ref;
 
 
             for (double alt = 30000; alt <= 43000; alt += 1000)
             {
                 h.Add(alt / 100);
 
-                double TAS = A306.M_MO * AtmosphereEnviroment.Get_a(alt);
+                double TAS = aircraft.M_MO * AtmosphereEnviroment.Get_a(alt);
                 double CAS = AtmosphereEnviroment.Get_CAS(alt, TAS);
 
 
-                double ff = A306.Get_ff(Aircraft.FlightPhase.Cruise, m: m_high, h: alt, CAS: CAS);
+                double ff = aircraft.Get_ff(Aircraft.FlightPhase.Cruise, m: m_high, h: alt, CAS: CAS);
                 ff /= 60;
                 double SR = TAS / ff;
                 sr.Add(SR);
 
-                ff = A306.Get_ff(Aircraft.FlightPhase.Cruise, m: m_middle, h: alt, CAS: CAS);
+                ff = aircraft.Get_ff(Aircraft.FlightPhase.Cruise, m: m_middle, h: alt, CAS: CAS);
                 ff /= 60;
                 SR = TAS / ff;
                 sr1.Add(SR);
 
-                ff = A306.Get_ff(Aircraft.FlightPhase.Cruise, h: alt, CAS: CAS);
+                ff = aircraft.Get_ff(Aircraft.FlightPhase.Cruise, h: alt, CAS: CAS);
                 ff /= 60;
                 SR = TAS / ff;
                 sr2.Add(SR);
@@ -3579,26 +3583,26 @@ namespace project1
         // 巡航数值表
         private void button32_Click(object sender, EventArgs e)
         {
+            double m_low = 104400;
+            double m_nominal = 140000;
+            double m_high = 171700;
+
             textBox2.Text = "\t\t\tCRUISE" + System.Environment.NewLine;
-            textBox2.Text += "\tCAS/M: 250/310/.79    Temperature: ISA" + System.Environment.NewLine;
-            textBox2.Text += "\tlo: 104.4t     nom: 140t    hi: 171.7t" + System.Environment.NewLine;
+            textBox2.Text += $"\tCAS/M: {aircraft.v_cr_1}/{aircraft.v_cr_2}/{aircraft.M_cr.ToString().Substring(1)}    Temperature: ISA" + System.Environment.NewLine;
+            textBox2.Text += $"\tlo: {m_low / 1000}t     nom: {m_nominal / 1000}t    hi: {m_high / 1000}t" + System.Environment.NewLine;
             textBox2.Text += "\t======================================" + System.Environment.NewLine;
             textBox2.Text += "\tFL\t TAS\t\tfuel" + System.Environment.NewLine;
             textBox2.Text += "\t\t[kts]\t      [kg/min]" + System.Environment.NewLine;
             textBox2.Text += "\t\t\tlo\tnom\thi" + System.Environment.NewLine;
             textBox2.Text += "\t======================================" + System.Environment.NewLine;
-
-            double m_low = 104400;
-            double m_nominal = 140000;
-            double m_high = 171700;
-
-            double h_cross = AtmosphereEnviroment.Get_h_cross(Units.kt2mps(A306.v_cr_2), A306.M_cr);
+            
+            double h_cross = AtmosphereEnviroment.Get_h_cross(Units.kt2mps(aircraft.v_cr_2), aircraft.M_cr);
 
             for (double h = 3000; h <= 41000; h += 2000)
             {
-                double CAS = A306.Get_v_cruise(h);
+                double CAS = aircraft.Get_v_cruise(h);
                 double TAS = 0;
-                double M_cr = A306.M_cr;
+                double M_cr = aircraft.M_cr;
 
                 if (h <= h_cross)
                 {
@@ -3613,23 +3617,23 @@ namespace project1
 
 
                 double ff_low;
-                ff_low = A306.Get_ff(Aircraft.FlightPhase.Cruise, m_low, h: h, CAS: Units.kt2mps(CAS));
+                ff_low = aircraft.Get_ff(Aircraft.FlightPhase.Cruise, m_low, h: h, CAS: Units.kt2mps(CAS));
                 ff_low = Math.Round(ff_low, 1);
 
 
                 double ff_nominal;
                 if (h == 41000)
-                    ff_nominal = A306.Get_ff(Aircraft.FlightPhase.Cruise, m_nominal, h: h, CAS: Units.kt2mps(CAS), thrustMode: Aircraft.ThrustMode.MaximumCruiseThrust);
+                    ff_nominal = aircraft.Get_ff(Aircraft.FlightPhase.Cruise, m_nominal, h: h, CAS: Units.kt2mps(CAS), thrustMode: Aircraft.ThrustMode.MaximumCruiseThrust);
                 else
-                    ff_nominal = A306.Get_ff(Aircraft.FlightPhase.Cruise, m_nominal, h: h, CAS: Units.kt2mps(CAS));
+                    ff_nominal = aircraft.Get_ff(Aircraft.FlightPhase.Cruise, m_nominal, h: h, CAS: Units.kt2mps(CAS));
                 ff_nominal = Math.Round(ff_nominal, 1);
 
 
                 double ff_high;
                 if (h >= 35000)
-                    ff_high = A306.Get_ff(Aircraft.FlightPhase.Cruise, m_high, h: h, CAS: Units.kt2mps(CAS), thrustMode: Aircraft.ThrustMode.MaximumCruiseThrust);
+                    ff_high = aircraft.Get_ff(Aircraft.FlightPhase.Cruise, m_high, h: h, CAS: Units.kt2mps(CAS), thrustMode: Aircraft.ThrustMode.MaximumCruiseThrust);
                 else
-                    ff_high = A306.Get_ff(Aircraft.FlightPhase.Cruise, m_high, h: h, CAS: Units.kt2mps(CAS));
+                    ff_high = aircraft.Get_ff(Aircraft.FlightPhase.Cruise, m_high, h: h, CAS: Units.kt2mps(CAS));
                 ff_high = Math.Round(ff_high, 1);
 
 
@@ -3653,7 +3657,7 @@ namespace project1
             List<double> tas = new List<double>();
             List<double> dg = new List<double>();
 
-            double W = A306.m_ref * AtmosphereEnviroment.g;
+            double W = aircraft.m_ref * AtmosphereEnviroment.g;
             double h = 18000;
 
             if (isClickeddg == false || textBox20.Text == "")
@@ -3663,8 +3667,8 @@ namespace project1
             }
             else if (Regex.IsMatch(textBox20.Text, @"^[\d]{1,5}$"))
             {
-                if (double.Parse(textBox20.Text) > A306.h_MO)
-                    h = A306.h_MO;
+                if (double.Parse(textBox20.Text) > aircraft.h_MO)
+                    h = aircraft.h_MO;
                 else
                     h = double.Parse(textBox20.Text);
             }
@@ -3672,15 +3676,15 @@ namespace project1
 
 
 
-            for (double CAS = A306.Get_v_stall(h, Aircraft.FlightPhase.Descent); CAS <= 600; CAS++)
+            for (double CAS = aircraft.Get_v_stall(h, Aircraft.FlightPhase.Descent); CAS <= 600; CAS++)
             {
                 double TAS = AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(CAS));
                 tas.Add(Units.mps2kt(TAS));
 
 
-                double D = A306.Get_D(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Descent);
-                double T = A306.Get_T(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Descent);
-                double FM = A306.Get_functionM(h, Aircraft.SpeedMode.ConstantCAS, Units.kt2mps(CAS));
+                double D = aircraft.Get_D(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Descent);
+                double T = aircraft.Get_T(h, Units.kt2mps(CAS), Aircraft.FlightPhase.Descent);
+                double FM = aircraft.Get_functionM(h, Aircraft.SpeedMode.ConstantCAS, Units.kt2mps(CAS));
 
                 double DG = (D - T) / W / FM;
                 dg.Add(DG);
@@ -3724,20 +3728,20 @@ namespace project1
             }
             else if (Regex.IsMatch(textBox21.Text, @"^[\d]{1,5}$"))
             {
-                if (double.Parse(textBox21.Text) > A306.h_MO)
-                    h = A306.h_MO;
+                if (double.Parse(textBox21.Text) > aircraft.h_MO)
+                    h = aircraft.h_MO;
                 else
                     h = double.Parse(textBox21.Text);
             }
             textBox21.Text = h.ToString();
 
 
-            for (double CAS = A306.Get_v_stall(h, Aircraft.FlightPhase.Descent) * 0.5; CAS <= 600; CAS++)
+            for (double CAS = aircraft.Get_v_stall(h, Aircraft.FlightPhase.Descent) * 0.5; CAS <= 600; CAS++)
             {
                 double TAS = AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(CAS));
                 tas.Add(Units.mps2kt(TAS));
 
-                double ROCD = (-1) * A306.Get_ROCD(h, Aircraft.SpeedMode.ConstantCAS, Units.kt2mps(CAS), Aircraft.FlightPhase.Descent);
+                double ROCD = (-1) * aircraft.Get_ROCD(h, Aircraft.SpeedMode.ConstantCAS, Units.kt2mps(CAS), Aircraft.FlightPhase.Descent);
                 rocd.Add(ROCD);
 
                 double Slope = ROCD / TAS;
@@ -3769,26 +3773,28 @@ namespace project1
         // 下降数值表
         private void button35_Click(object sender, EventArgs e)
         {
+            double m_nominal = 140000;
+
             textBox3.Text = "\t\t   DESCENT" + System.Environment.NewLine;
-            textBox3.Text += "\tCAS/M: 250/280/.79" + System.Environment.NewLine;
-            textBox3.Text += "\tnom: 140t     Temperature: ISA" + System.Environment.NewLine;
+            textBox3.Text += $"\tCAS/M: {aircraft.v_des_2}/{aircraft.v_des_1}/{aircraft.M_des.ToString().Substring(1)}" + System.Environment.NewLine;
+            textBox3.Text += $"\tnom: {m_nominal / 1000}t     Temperature: ISA" + System.Environment.NewLine;
             textBox3.Text += "\t==============================" + System.Environment.NewLine;
             textBox3.Text += "\tFL\t TAS\tROCD\tfuel" + System.Environment.NewLine;
             textBox3.Text += "\t\t[kts]\t[fpm] [kg/min]" + System.Environment.NewLine;
             textBox3.Text += "\t\t\tnom\tnom" + System.Environment.NewLine;
             textBox3.Text += "\t==============================" + System.Environment.NewLine;
 
-            double h_cross = AtmosphereEnviroment.Get_h_cross(Units.kt2mps(A306.v_des_1), A306.M_des);
+            double h_cross = AtmosphereEnviroment.Get_h_cross(Units.kt2mps(aircraft.v_des_1), aircraft.M_des);
 
             for (double h = 0; h <= 41000;)
             {
                 double CAS = 0;
                 double TAS = 0;
-                double M_des = A306.M_des;
+                double M_des = aircraft.M_des;
 
                 if (h <= h_cross)
                 {
-                    CAS = A306.Get_v_descent(h);
+                    CAS = aircraft.Get_v_descent(h, m: m_nominal);
                     TAS = Units.mps2kt(AtmosphereEnviroment.Get_TAS(h, Units.kt2mps(CAS)));
                     TAS = Math.Round(TAS);
                 }
@@ -3802,23 +3808,23 @@ namespace project1
 
                 double ROCD = 0;
                 if (h > h_cross)
-                    ROCD = (-1) * A306.Get_ROCD(h, Aircraft.SpeedMode.ConstantMach, M_des, Aircraft.FlightPhase.Descent);
+                    ROCD = (-1) * aircraft.Get_ROCD(h, Aircraft.SpeedMode.ConstantMach, M_des, Aircraft.FlightPhase.Descent, m: m_nominal);
                 else if (h > 2000)
-                    ROCD = (-1) * A306.Get_ROCD(h, Aircraft.SpeedMode.ConstantCAS, Units.kt2mps(CAS), Aircraft.FlightPhase.Descent);
+                    ROCD = (-1) * aircraft.Get_ROCD(h, Aircraft.SpeedMode.ConstantCAS, Units.kt2mps(CAS), Aircraft.FlightPhase.Descent, m: m_nominal);
                 else if (h == 2000)
-                    ROCD = (-1) * A306.Get_ROCD(h, Aircraft.SpeedMode.ConstantCAS, Units.kt2mps(CAS), Aircraft.FlightPhase.Approach);
+                    ROCD = (-1) * aircraft.Get_ROCD(h, Aircraft.SpeedMode.ConstantCAS, Units.kt2mps(CAS), Aircraft.FlightPhase.Approach, m: m_nominal);
                 else
-                    ROCD = (-1) * A306.Get_ROCD(h, Aircraft.SpeedMode.ConstantCAS, Units.kt2mps(CAS), Aircraft.FlightPhase.Landing);
+                    ROCD = (-1) * aircraft.Get_ROCD(h, Aircraft.SpeedMode.ConstantCAS, Units.kt2mps(CAS), Aircraft.FlightPhase.Landing, m: m_nominal);
                 ROCD = Math.Round(ROCD);
 
 
                 double ff;
                 if (h > 2000)
-                    ff = A306.Get_ff(Aircraft.FlightPhase.Descent, h: h, CAS: Units.kt2mps(CAS), thrustMode: Aircraft.ThrustMode.IdleThrust);
+                    ff = aircraft.Get_ff(Aircraft.FlightPhase.Descent, m: m_nominal, h: h, CAS: Units.kt2mps(CAS), thrustMode: Aircraft.ThrustMode.IdleThrust);
                 else if (h == 2000)
-                    ff = A306.Get_ff(Aircraft.FlightPhase.Approach, h: h, CAS: Units.kt2mps(CAS), thrustMode: Aircraft.ThrustMode.IdleThrust);
+                    ff = aircraft.Get_ff(Aircraft.FlightPhase.Approach, m: m_nominal, h: h, CAS: Units.kt2mps(CAS), thrustMode: Aircraft.ThrustMode.IdleThrust);
                 else
-                    ff = A306.Get_ff(Aircraft.FlightPhase.Landing, h: h, CAS: Units.kt2mps(CAS), thrustMode: Aircraft.ThrustMode.IdleThrust);
+                    ff = aircraft.Get_ff(Aircraft.FlightPhase.Landing, m: m_nominal, h: h, CAS: Units.kt2mps(CAS), thrustMode: Aircraft.ThrustMode.IdleThrust);
                 ff = Math.Round(ff, 1);
 
 
