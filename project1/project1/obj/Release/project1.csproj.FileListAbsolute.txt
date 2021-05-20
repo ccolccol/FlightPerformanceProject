@@ -1,0 +1,8 @@
+G:\project\projectGit\project1\project1\bin\Release\飞机性能工程图集.exe.config
+G:\project\projectGit\project1\project1\bin\Release\飞机性能工程图集.exe
+G:\project\projectGit\project1\project1\bin\Release\飞机性能工程图集.pdb
+G:\project\projectGit\project1\project1\obj\Release\project1.Platform.resources
+G:\project\projectGit\project1\project1\obj\Release\project1.Properties.Resources.resources
+G:\project\projectGit\project1\project1\obj\Release\project1.csproj.GenerateResource.Cache
+G:\project\projectGit\project1\project1\obj\Release\飞机性能工程图集.exe
+G:\project\projectGit\project1\project1\obj\Release\飞机性能工程图集.pdb

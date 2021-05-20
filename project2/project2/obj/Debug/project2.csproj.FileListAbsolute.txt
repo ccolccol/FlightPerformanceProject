@@ -31,3 +31,14 @@ G:\project\project2\project2\obj\Debug\project2.LoadData.resources
 G:\project\project2\project2\obj\Debug\project2.Startup.resources
 G:\project\project2\project2\obj\Debug\project2.Properties.Resources.resources
 G:\project\project2\project2\obj\Debug\project2.csproj.GenerateResource.Cache
+G:\project\projectGit\project2\project2\bin\Debug\BADA Data Manager.exe.config
+G:\project\projectGit\project2\project2\obj\Debug\BADA Data Manager.exe
+G:\project\projectGit\project2\project2\obj\Debug\BADA Data Manager.pdb
+G:\project\projectGit\project2\project2\bin\Debug\BADA Data Manager.exe
+G:\project\projectGit\project2\project2\bin\Debug\BADA Data Manager.pdb
+G:\project\projectGit\project2\project2\obj\Debug\project2.csprojResolveAssemblyReference.cache
+G:\project\projectGit\project2\project2\obj\Debug\project2.CreateData.resources
+G:\project\projectGit\project2\project2\obj\Debug\project2.LoadData.resources
+G:\project\projectGit\project2\project2\obj\Debug\project2.Startup.resources
+G:\project\projectGit\project2\project2\obj\Debug\project2.Properties.Resources.resources
+G:\project\projectGit\project2\project2\obj\Debug\project2.csproj.GenerateResource.Cache
