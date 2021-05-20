@@ -1,0 +1,33 @@
+E:\project\project2\bin\Debug\project2.exe.config
+E:\project\project2\bin\Debug\project2.exe
+E:\project\project2\bin\Debug\project2.pdb
+E:\project\project2\obj\Debug\project2.csprojResolveAssemblyReference.cache
+E:\project\project2\obj\Debug\project2.Properties.Resources.resources
+E:\project\project2\obj\Debug\project2.csproj.GenerateResource.Cache
+E:\project\project2\obj\Debug\project2.exe
+E:\project\project2\obj\Debug\project2.pdb
+E:\project\project2\obj\Debug\project2.Startup.resources
+E:\project\project2\obj\Debug\project2.LoadData.resources
+E:\project\project2\obj\Debug\project2.CreateData.resources
+E:\project\project2\project2\bin\Debug\BADA Data Manager.exe.config
+E:\project\project2\project2\bin\Debug\BADA Data Manager.exe
+E:\project\project2\project2\bin\Debug\BADA Data Manager.pdb
+E:\project\project2\project2\obj\Debug\project2.csprojResolveAssemblyReference.cache
+E:\project\project2\project2\obj\Debug\project2.CreateData.resources
+E:\project\project2\project2\obj\Debug\project2.LoadData.resources
+E:\project\project2\project2\obj\Debug\project2.Startup.resources
+E:\project\project2\project2\obj\Debug\project2.Properties.Resources.resources
+E:\project\project2\project2\obj\Debug\project2.csproj.GenerateResource.Cache
+E:\project\project2\project2\obj\Debug\BADA Data Manager.exe
+E:\project\project2\project2\obj\Debug\BADA Data Manager.pdb
+G:\project\project2\project2\bin\Debug\BADA Data Manager.exe.config
+G:\project\project2\project2\obj\Debug\BADA Data Manager.exe
+G:\project\project2\project2\obj\Debug\BADA Data Manager.pdb
+G:\project\project2\project2\bin\Debug\BADA Data Manager.exe
+G:\project\project2\project2\bin\Debug\BADA Data Manager.pdb
+G:\project\project2\project2\obj\Debug\project2.csprojResolveAssemblyReference.cache
+G:\project\project2\project2\obj\Debug\project2.CreateData.resources
+G:\project\project2\project2\obj\Debug\project2.LoadData.resources
+G:\project\project2\project2\obj\Debug\project2.Startup.resources
+G:\project\project2\project2\obj\Debug\project2.Properties.Resources.resources
+G:\project\project2\project2\obj\Debug\project2.csproj.GenerateResource.Cache
